@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 
 import '../../../core/providers.dart';
 import '../../../core/security/pin_auth.dart';
+import '../../../core/utils/responsive.dart';
 import '../../customers/application/customers_notifier.dart';
 import '../../dashboard/application/dashboard_notifier.dart';
 import '../../products/application/products_notifier.dart';
@@ -13,8 +14,17 @@ import '../../reports/application/reports_notifier.dart';
 import '../data/app_settings_repository.dart';
 import '../../../core/theme/app_semantic_colors.dart';
 
-class SettingsScreen extends ConsumerWidget {
+enum _SettingsItem { pin, exportDb, restoreDb, products, customers }
+
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  _SettingsItem? _selected;
 
   Future<void> _showPinManager(BuildContext context, WidgetRef ref) async {
     final existingPin = await ref.read(pinCodeProvider.future);
@@ -227,71 +237,199 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final sem = context.sem;
     final scheme = Theme.of(context).colorScheme;
 
+    Future<void> handleTap(_SettingsItem item) async {
+      setState(() => _selected = item);
+      switch (item) {
+        case _SettingsItem.pin:
+          await _showPinManager(context, ref);
+          break;
+        case _SettingsItem.exportDb:
+          await _exportDb(context, ref);
+          break;
+        case _SettingsItem.restoreDb:
+          await _restoreDb(context, ref);
+          break;
+        case _SettingsItem.products:
+          context.go('/settings/products');
+          break;
+        case _SettingsItem.customers:
+          context.go('/settings/customers');
+          break;
+      }
+    }
+
+    Widget masterList({required bool isExpanded}) {
+      final padding = context.pagePadding;
+      final listPadding = isExpanded
+          ? EdgeInsets.zero
+          : padding;
+
+      return ListView(
+        padding: listPadding,
+        children: [
+          _SectionHeader(
+            title: 'Security',
+            background: sem.infoContainer,
+            foreground: sem.onInfoContainer,
+            icon: Icons.security_rounded,
+          ),
+          ListTile(
+            selected: isExpanded && _selected == _SettingsItem.pin,
+            leading: const Icon(Icons.lock_outline),
+            title: const Text('App PIN'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => handleTap(_SettingsItem.pin),
+          ),
+          const SizedBox(height: 16),
+          _SectionHeader(
+            title: 'Backup',
+            background: scheme.surfaceContainerHigh,
+            foreground: scheme.onSurface,
+            icon: Icons.cloud_upload_rounded,
+          ),
+          ListTile(
+            selected: isExpanded && _selected == _SettingsItem.exportDb,
+            leading: const Icon(Icons.backup_outlined),
+            title: const Text('Export backup'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => handleTap(_SettingsItem.exportDb),
+          ),
+          ListTile(
+            selected: isExpanded && _selected == _SettingsItem.restoreDb,
+            leading: Icon(Icons.restore_outlined, color: sem.danger),
+            title: const Text('Restore backup'),
+            trailing: const Icon(Icons.chevron_right),
+            textColor: Theme.of(context).colorScheme.onSurface,
+            onTap: () => handleTap(_SettingsItem.restoreDb),
+          ),
+          const SizedBox(height: 16),
+          _SectionHeader(
+            title: 'Data',
+            background: scheme.surfaceContainerHigh,
+            foreground: scheme.onSurface,
+            icon: Icons.storage_rounded,
+          ),
+          ListTile(
+            selected: isExpanded && _selected == _SettingsItem.products,
+            leading: const Icon(Icons.inventory_2_outlined),
+            title: const Text('Products'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => handleTap(_SettingsItem.products),
+          ),
+          ListTile(
+            selected: isExpanded && _selected == _SettingsItem.customers,
+            leading: const Icon(Icons.people_outline),
+            title: const Text('Customers (Utang)'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => handleTap(_SettingsItem.customers),
+          ),
+        ],
+      );
+    }
+
+    Widget detailPanel() {
+      final item = _selected;
+
+      String title;
+      String description;
+      String actionLabel;
+      VoidCallback? action;
+      ButtonStyle? style;
+
+      switch (item) {
+        case _SettingsItem.pin:
+          title = 'App PIN';
+          description =
+              'Protect Settings access with a PIN. Use this on shared devices.';
+          actionLabel = 'Manage PIN';
+          action = () => _showPinManager(context, ref);
+        case _SettingsItem.exportDb:
+          title = 'Export backup';
+          description =
+              'Save a local database backup file that can be restored later.';
+          actionLabel = 'Export backup';
+          action = () => _exportDb(context, ref);
+        case _SettingsItem.restoreDb:
+          title = 'Restore backup';
+          description =
+              'Restore from a backup file. This will replace all local data.';
+          actionLabel = 'Restore backup';
+          style = FilledButton.styleFrom(
+            backgroundColor: sem.danger,
+            foregroundColor: sem.onDanger,
+          );
+          action = () => _restoreDb(context, ref);
+        case _SettingsItem.products:
+          title = 'Products';
+          description = 'Manage product catalog and inventory.';
+          actionLabel = 'Open Products';
+          action = () => context.go('/settings/products');
+        case _SettingsItem.customers:
+          title = 'Customers (Utang)';
+          description = 'Manage credit customers and balances.';
+          actionLabel = 'Open Customers';
+          action = () => context.go('/settings/customers');
+        case null:
+          title = 'Settings';
+          description = 'Select an item on the left to view details.';
+          actionLabel = '';
+          action = null;
+      }
+
+      return Card(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
+              const SizedBox(height: 12),
+              Text(description),
+              const Spacer(),
+              if (action != null)
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: FilledButton(
+                      style: style,
+                      onPressed: action,
+                      child: Text(actionLabel),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            _SectionHeader(
-              title: 'Security',
-              background: sem.infoContainer,
-              foreground: sem.onInfoContainer,
-              icon: Icons.security_rounded,
-            ),
-            ListTile(
-              leading: const Icon(Icons.lock_outline),
-              title: const Text('App PIN'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _showPinManager(context, ref),
-            ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final bp = breakpointForWidth(constraints.maxWidth);
+          if (bp != ScreenBreakpoint.expanded) {
+            return masterList(isExpanded: false);
+          }
 
-            const SizedBox(height: 16),
-            _SectionHeader(
-              title: 'Backup',
-              background: scheme.surfaceContainerHigh,
-              foreground: scheme.onSurface,
-              icon: Icons.cloud_upload_rounded,
+          final padding = context.pagePadding;
+          return Padding(
+            padding: padding,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 3, child: masterList(isExpanded: true)),
+                const SizedBox(width: 16),
+                Expanded(flex: 4, child: detailPanel()),
+              ],
             ),
-            ListTile(
-              leading: const Icon(Icons.backup_outlined),
-              title: const Text('Export backup'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => _exportDb(context, ref),
-            ),
-            ListTile(
-              leading: Icon(Icons.restore_outlined, color: sem.danger),
-              title: const Text('Restore backup'),
-              trailing: const Icon(Icons.chevron_right),
-              textColor: Theme.of(context).colorScheme.onSurface,
-              onTap: () => _restoreDb(context, ref),
-            ),
-
-            const SizedBox(height: 16),
-            _SectionHeader(
-              title: 'Data',
-              background: scheme.surfaceContainerHigh,
-              foreground: scheme.onSurface,
-              icon: Icons.storage_rounded,
-            ),
-            ListTile(
-              leading: const Icon(Icons.inventory_2_outlined),
-              title: const Text('Products'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go('/settings/products'),
-            ),
-            ListTile(
-              leading: const Icon(Icons.people_outline),
-              title: const Text('Customers (Utang)'),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.go('/settings/customers'),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

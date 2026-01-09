@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/money.dart';
 import '../../../core/theme/app_semantic_colors.dart';
+import '../../../core/utils/responsive.dart';
 import '../application/dashboard_notifier.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -24,51 +25,38 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SafeArea(
-        child: dashAsync.when(
-          data: (d) {
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: _StatCard(
-                        title: 'Today sales',
-                        value: Money.format(d.todayTotalSalesCents),
-                        tone: _CardTone.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _StatCard(
-                        title: 'Transactions',
-                        value: d.todayTransactionCount.toString(),
-                        tone: _CardTone.neutral,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _StatCard(
-                  title: 'Outstanding credit',
-                  value: Money.format(d.outstandingCreditCents),
-                  tone: _CardTone.warning,
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  'Low stock alerts',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                if (d.lowStockProducts.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 24),
-                    child: Center(child: Text('No low stock items.')),
-                  )
-                else
-                  ...d.lowStockProducts.map(
-                    (p) => Padding(
+      body: dashAsync.when(
+        data: (d) {
+            final statCards = <Widget>[
+              _StatCard(
+                title: 'Today sales',
+                value: Money.format(d.todayTotalSalesCents),
+                tone: _CardTone.primary,
+              ),
+              _StatCard(
+                title: 'Transactions',
+                value: d.todayTransactionCount.toString(),
+                tone: _CardTone.neutral,
+              ),
+              _StatCard(
+                title: 'Outstanding credit',
+                value: Money.format(d.outstandingCreditCents),
+                tone: _CardTone.warning,
+              ),
+            ];
+
+            Widget lowStockBody() {
+              if (d.lowStockProducts.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 24),
+                  child: Center(child: Text('No low stock items.')),
+                );
+              }
+
+              return Column(
+                children: [
+                  for (final p in d.lowStockProducts)
+                    Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: Card(
                         color: context.sem.warningContainer,
@@ -96,13 +84,108 @@ class DashboardScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                  ),
-              ],
+                ],
+              );
+            }
+
+            Widget statsSection(ScreenBreakpoint bp) {
+              if (bp == ScreenBreakpoint.compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (final (i, card) in statCards.indexed) ...[
+                      SizedBox(width: double.infinity, child: card),
+                      if (i != statCards.length - 1)
+                        const SizedBox(height: 12),
+                    ],
+                  ],
+                );
+              }
+
+              final maxExtent = bp == ScreenBreakpoint.medium ? 420.0 : 360.0;
+              return GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: statCards.length,
+                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: maxExtent,
+                  mainAxisSpacing: 12,
+                  crossAxisSpacing: 12,
+                  childAspectRatio: 2.2,
+                ),
+                itemBuilder: (context, index) => statCards[index],
+              );
+            }
+
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final bp = breakpointForWidth(constraints.maxWidth);
+                final padding = context.pagePadding;
+
+                if (bp == ScreenBreakpoint.expanded) {
+                  return Padding(
+                    padding: padding,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: ListView(
+                            padding: EdgeInsets.zero,
+                            children: [
+                              statsSection(bp),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          flex: 2,
+                          child: Card(
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Low stock alerts',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Expanded(
+                                    child: SingleChildScrollView(
+                                      child: lowStockBody(),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView(
+                  padding: padding,
+                  children: [
+                    statsSection(bp),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Low stock alerts',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    lowStockBody(),
+                  ],
+                );
+              },
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
       ),
     );
   }
@@ -149,10 +232,13 @@ class _StatCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: onBg,
-                fontWeight: FontWeight.w900,
-              ),
+              style: (context.isExpanded
+                      ? Theme.of(context).textTheme.headlineMedium
+                      : Theme.of(context).textTheme.headlineSmall)
+                  ?.copyWith(
+                    color: onBg,
+                    fontWeight: FontWeight.w900,
+                  ),
             ),
           ],
         ),

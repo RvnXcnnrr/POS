@@ -6,15 +6,36 @@ Flutter POS mobile app.
 
 Prereqs:
 
-- Flutter (stable) with Dart `>= 3.10.4`
-- Android SDK / Android Studio
+- Flutter (stable) with Dart `>= 3.10.4` (see `pubspec.yaml`)
+- Android SDK / Android Studio (for Android builds)
+- macOS + Xcode (only required to build/run for iOS)
 
 Commands:
 
 - Install deps: `flutter pub get`
-- Run: `flutter run`
+- Analyze: `flutter analyze`
+- Test: `flutter test`
+- Run: `flutter run` (use `flutter devices` then `flutter run -d <id>` if needed)
 - Debug APK: `flutter build apk --debug`
 - Release APK: `flutter build apk --release`
+
+## Responsive/adaptive UI
+
+The app uses a single codebase with adaptive layouts across:
+
+- Phones/tablets
+- Portrait/landscape
+
+Breakpoints are defined in `lib/core/utils/responsive.dart`:
+
+- Compact: < 600dp
+- Medium: 600–1024dp
+- Expanded: > 1024dp
+
+Navigation adapts by breakpoint:
+
+- Compact: bottom `NavigationBar`
+- Medium/Expanded: side `NavigationRail`
 
 ## Docs
 

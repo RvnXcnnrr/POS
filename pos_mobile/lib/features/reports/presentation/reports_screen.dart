@@ -11,6 +11,7 @@ import '../../customers/application/customers_notifier.dart';
 import '../../dashboard/application/dashboard_notifier.dart';
 import '../../../core/security/pin_auth.dart';
 import '../data/reports_repository.dart' show SaleListEntry;
+import '../../../core/utils/responsive.dart';
 
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
@@ -85,10 +86,42 @@ class ReportsScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: SafeArea(
-        child: reportsAsync.when(
-          data: (state) {
+      body: reportsAsync.when(
+        data: (state) {
             final s = state.summary;
+
+            final summaryCards = <Widget>[
+              _SummaryCard(
+                title: 'Total sales',
+                value: Money.format(s.totalSalesCents),
+                tone: _SummaryTone.primary,
+              ),
+              _SummaryCard(
+                title: 'Cash',
+                value: Money.format(s.cashSalesCents),
+                tone: _SummaryTone.success,
+              ),
+              _SummaryCard(
+                title: 'Credit',
+                value: Money.format(s.creditSalesCents),
+                tone: _SummaryTone.warning,
+              ),
+              _SummaryCard(
+                title: 'Transactions',
+                value: s.transactionCount.toString(),
+                tone: _SummaryTone.neutral,
+              ),
+              _SummaryCard(
+                title: 'Payments collected',
+                value: Money.format(s.paymentsCollectedCents),
+                tone: _SummaryTone.info,
+              ),
+              _SummaryCard(
+                title: 'Outstanding credit total',
+                value: Money.format(s.outstandingCreditCents),
+                tone: _SummaryTone.warning,
+              ),
+            ];
 
             return NotificationListener<ScrollNotification>(
               onNotification: (n) {
@@ -97,104 +130,147 @@ class ReportsScreen extends ConsumerWidget {
                 }
                 return false;
               },
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  Text('Today', style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: 12),
-                  _SummaryCard(
-                    title: 'Total sales',
-                    value: Money.format(s.totalSalesCents),
-                    tone: _SummaryTone.primary,
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _SummaryCard(
-                          title: 'Cash',
-                          value: Money.format(s.cashSalesCents),
-                          tone: _SummaryTone.success,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _SummaryCard(
-                          title: 'Credit',
-                          value: Money.format(s.creditSalesCents),
-                          tone: _SummaryTone.warning,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _SummaryCard(
-                          title: 'Transactions',
-                          value: s.transactionCount.toString(),
-                          tone: _SummaryTone.neutral,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _SummaryCard(
-                          title: 'Payments collected',
-                          value: Money.format(s.paymentsCollectedCents),
-                          tone: _SummaryTone.info,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  _SummaryCard(
-                    title: 'Outstanding credit total',
-                    value: Money.format(s.outstandingCreditCents),
-                    tone: _SummaryTone.warning,
-                  ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Transactions',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  if (state.sales.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 24),
-                      child: Center(child: Text('No transactions today.')),
-                    )
-                  else
-                    ...state.sales.map(
-                      (t) => Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Card(
-                          child: ListTile(
-                            leading: _PaymentIndicator(type: t.paymentType),
-                            title: Text(Money.format(t.totalCents)),
-                            subtitle: Text(_subtitle(t)),
-                            trailing: Text('#${t.id}'),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final bp = breakpointForWidth(constraints.maxWidth);
+                  final isLandscape =
+                      MediaQuery.orientationOf(context) == Orientation.landscape;
+                  final padding = context.pagePadding;
+
+                  final summaryAspectRatio = switch (bp) {
+                    ScreenBreakpoint.compact => isLandscape ? 2.6 : 3.2,
+                    ScreenBreakpoint.medium => 2.8,
+                    ScreenBreakpoint.expanded => 2.6,
+                  };
+
+                  return CustomScrollView(
+                    slivers: [
+                      SliverPadding(
+                        padding: padding,
+                        sliver: SliverToBoxAdapter(
+                          child: Text(
+                            'Today',
+                            style: Theme.of(context).textTheme.titleLarge,
                           ),
                         ),
                       ),
-                    ),
-                  if (state.loadingMore)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  else if (state.hasMore)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 16),
-                      child: Center(child: Text('Scroll to load more…')),
-                    ),
-                ],
+                      SliverPadding(
+                        padding: EdgeInsets.fromLTRB(
+                          padding.left,
+                          12,
+                          padding.right,
+                          0,
+                        ),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: bp == ScreenBreakpoint.compact
+                                ? 520
+                                : 420,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: summaryAspectRatio,
+                          ),
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => summaryCards[index],
+                            childCount: summaryCards.length,
+                          ),
+                        ),
+                      ),
+                      SliverPadding(
+                        padding: EdgeInsets.fromLTRB(
+                          padding.left,
+                          20,
+                          padding.right,
+                          8,
+                        ),
+                        sliver: SliverToBoxAdapter(
+                          child: Text(
+                            'Transactions',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                      ),
+                      if (state.sales.isEmpty)
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(
+                            padding.left,
+                            24,
+                            padding.right,
+                            24,
+                          ),
+                          sliver: const SliverToBoxAdapter(
+                            child:
+                                Center(child: Text('No transactions today.')),
+                          ),
+                        )
+                      else ...[
+                        if (bp == ScreenBreakpoint.expanded)
+                          SliverPadding(
+                            padding: EdgeInsets.fromLTRB(
+                              padding.left,
+                              0,
+                              padding.right,
+                              8,
+                            ),
+                            sliver: const SliverToBoxAdapter(
+                              child: _TransactionTableHeader(),
+                            ),
+                          ),
+                        SliverPadding(
+                          padding: EdgeInsets.fromLTRB(
+                            padding.left,
+                            0,
+                            padding.right,
+                            0,
+                          ),
+                          sliver: SliverList.separated(
+                            itemCount: state.sales.length,
+                            separatorBuilder: (context, index) =>
+                                const SizedBox(height: 8),
+                            itemBuilder: (context, index) {
+                              final t = state.sales[index];
+                              if (bp == ScreenBreakpoint.expanded) {
+                                return _TransactionTableRow(entry: t);
+                              }
+                              return Card(
+                                child: ListTile(
+                                  leading:
+                                      _PaymentIndicator(type: t.paymentType),
+                                  title: Text(Money.format(t.totalCents)),
+                                  subtitle: Text(_subtitle(t)),
+                                  trailing: Text('#${t.id}'),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                      SliverPadding(
+                        padding: EdgeInsets.fromLTRB(
+                          padding.left,
+                          16,
+                          padding.right,
+                          16,
+                        ),
+                        sliver: SliverToBoxAdapter(
+                          child: state.loadingMore
+                              ? const Center(child: CircularProgressIndicator())
+                              : (state.hasMore
+                                  ? const Center(
+                                      child: Text('Scroll to load more…'),
+                                    )
+                                  : null),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
-        ),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Error: $e')),
       ),
     );
   }
@@ -207,6 +283,112 @@ class ReportsScreen extends ConsumerWidget {
         ? ' • ${t.customerName}'
         : '';
     return '${dt.toString()} • $typeLabel$customerPart';
+  }
+}
+
+class _TransactionTableHeader extends StatelessWidget {
+  const _TransactionTableHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Card(
+      color: scheme.surfaceContainerHigh,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: DefaultTextStyle(
+          style: Theme.of(context).textTheme.labelLarge!.copyWith(
+                fontWeight: FontWeight.w900,
+              ),
+          child: const Row(
+            children: [
+              Expanded(flex: 2, child: Text('ID')),
+              Expanded(flex: 3, child: Text('Payment')),
+              Expanded(flex: 4, child: Text('Customer')),
+              Expanded(flex: 5, child: Text('Time')),
+              Expanded(
+                flex: 3,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text('Total'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _TransactionTableRow extends StatelessWidget {
+  const _TransactionTableRow({required this.entry});
+
+  final SaleListEntry entry;
+
+  @override
+  Widget build(BuildContext context) {
+    final dt = DateTime.fromMillisecondsSinceEpoch(entry.createdAtMs);
+    final typeLabel =
+        entry.paymentType == PaymentType.cash ? 'Cash' : 'Credit';
+    final customer = entry.paymentType == PaymentType.credit
+        ? (entry.customerName ?? '—')
+        : '—';
+
+    return Card(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 48),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Expanded(flex: 2, child: Text('#${entry.id}')),
+              Expanded(
+                flex: 3,
+                child: Row(
+                  children: [
+                    _PaymentIndicator(type: entry.paymentType),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        typeLabel,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Expanded(
+                flex: 4,
+                child: Text(
+                  customer,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Expanded(
+                flex: 5,
+                child: Text(
+                  dt.toString(),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    Money.format(entry.totalCents),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

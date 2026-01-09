@@ -13,6 +13,7 @@ import 'features/customers/presentation/customer_form_screen.dart';
 import 'features/customers/presentation/customer_detail_screen.dart';
 import 'features/customers/presentation/add_payment_screen.dart';
 import 'core/security/pin_auth.dart';
+import 'core/utils/responsive.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -137,34 +138,70 @@ class _RootScaffold extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (i) => _onTap(context, ref, i),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.dashboard_outlined),
-            selectedIcon: Icon(Icons.dashboard),
-            label: 'Dashboard',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.point_of_sale_outlined),
-            selectedIcon: Icon(Icons.point_of_sale),
-            label: 'Checkout',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.assessment_outlined),
-            selectedIcon: Icon(Icons.assessment),
-            label: 'Reports',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: 'Settings',
-          ),
-        ],
+    const destinations = <({
+      String label,
+      IconData icon,
+      IconData selectedIcon,
+    })>[
+      (label: 'Dashboard', icon: Icons.dashboard_outlined, selectedIcon: Icons.dashboard),
+      (
+        label: 'Checkout',
+        icon: Icons.point_of_sale_outlined,
+        selectedIcon: Icons.point_of_sale,
       ),
+      (label: 'Reports', icon: Icons.assessment_outlined, selectedIcon: Icons.assessment),
+      (label: 'Settings', icon: Icons.settings_outlined, selectedIcon: Icons.settings),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bp = breakpointForWidth(constraints.maxWidth);
+        final useRail = bp != ScreenBreakpoint.compact;
+
+        return Scaffold(
+          body: SafeArea(
+            bottom: useRail,
+            child: useRail
+                ? Row(
+                    children: [
+                      NavigationRail(
+                        selectedIndex: navigationShell.currentIndex,
+                        onDestinationSelected: (i) => _onTap(context, ref, i),
+                        extended: bp == ScreenBreakpoint.expanded,
+                        labelType: bp == ScreenBreakpoint.expanded
+                            ? NavigationRailLabelType.none
+                            : NavigationRailLabelType.selected,
+                        destinations: [
+                          for (final d in destinations)
+                            NavigationRailDestination(
+                              icon: Icon(d.icon),
+                              selectedIcon: Icon(d.selectedIcon),
+                              label: Text(d.label),
+                            ),
+                        ],
+                      ),
+                      const VerticalDivider(width: 1),
+                      Expanded(child: navigationShell),
+                    ],
+                  )
+                : navigationShell,
+          ),
+          bottomNavigationBar: useRail
+              ? null
+              : NavigationBar(
+                  selectedIndex: navigationShell.currentIndex,
+                  onDestinationSelected: (i) => _onTap(context, ref, i),
+                  destinations: [
+                    for (final d in destinations)
+                      NavigationDestination(
+                        icon: Icon(d.icon),
+                        selectedIcon: Icon(d.selectedIcon),
+                        label: d.label,
+                      ),
+                  ],
+                ),
+        );
+      },
     );
   }
 }

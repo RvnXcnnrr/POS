@@ -14,7 +14,12 @@ A simple, offline-first mobile POS for a small store that can:
 
 ## 2) Target users
 
-- **Store owner / cashier** using a single Android device.
+- **Store owner / cashier** using a phone or tablet.
+
+Notes:
+
+- The UI is responsive/adaptive across compact/medium/expanded breakpoints and supports portrait/landscape.
+- The business rules and offline-first behavior remain the same regardless of form factor.
 
 ## 3) Navigation map (routes)
 
