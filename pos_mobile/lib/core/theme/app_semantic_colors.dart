@@ -21,10 +21,6 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     required this.onInfoContainer,
     required this.disabled,
     required this.onDisabled,
-    required this.surfaceLow,
-    required this.surfaceHigh,
-    required this.surfaceHighest,
-    required this.border,
   });
 
   final Color success;
@@ -50,12 +46,6 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
   final Color disabled;
   final Color onDisabled;
 
-  final Color surfaceLow;
-  final Color surfaceHigh;
-  final Color surfaceHighest;
-
-  final Color border;
-
   @override
   AppSemanticColors copyWith({
     Color? success,
@@ -76,10 +66,6 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
     Color? onInfoContainer,
     Color? disabled,
     Color? onDisabled,
-    Color? surfaceLow,
-    Color? surfaceHigh,
-    Color? surfaceHighest,
-    Color? border,
   }) {
     return AppSemanticColors(
       success: success ?? this.success,
@@ -100,10 +86,6 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       onInfoContainer: onInfoContainer ?? this.onInfoContainer,
       disabled: disabled ?? this.disabled,
       onDisabled: onDisabled ?? this.onDisabled,
-      surfaceLow: surfaceLow ?? this.surfaceLow,
-      surfaceHigh: surfaceHigh ?? this.surfaceHigh,
-      surfaceHighest: surfaceHighest ?? this.surfaceHighest,
-      border: border ?? this.border,
     );
   }
 
@@ -150,10 +132,6 @@ class AppSemanticColors extends ThemeExtension<AppSemanticColors> {
       onInfoContainer: Color.lerp(onInfoContainer, other.onInfoContainer, t)!,
       disabled: Color.lerp(disabled, other.disabled, t)!,
       onDisabled: Color.lerp(onDisabled, other.onDisabled, t)!,
-      surfaceLow: Color.lerp(surfaceLow, other.surfaceLow, t)!,
-      surfaceHigh: Color.lerp(surfaceHigh, other.surfaceHigh, t)!,
-      surfaceHighest: Color.lerp(surfaceHighest, other.surfaceHighest, t)!,
-      border: Color.lerp(border, other.border, t)!,
     );
   }
 }

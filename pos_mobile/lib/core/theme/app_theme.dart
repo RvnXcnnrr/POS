@@ -9,8 +9,6 @@ class AppTheme {
 
   static const _bg = Color(0xFFF5FAF9); // near-white w/ subtle tint
   static const _surface = Color(0xFFFBFDFC);
-  static const _surfaceHigh = Color(0xFFF0F6F5);
-  static const _surfaceHighest = Color(0xFFE7EFEE);
 
   static const _onSurface = Color(0xFF0B1F1E);
   static const _onSurfaceMuted = Color(0xFF3A5150);
@@ -38,8 +36,6 @@ class AppTheme {
   static const _disabled = Color(0xFF9AA8A7);
   static const _onDisabled = Color(0xFF1C2B2A);
 
-  static const _border = Color(0xFFCED8D7);
-
   static const double _cardElevation = 2.5;
   static const BorderRadius _radiusLg = BorderRadius.all(Radius.circular(18));
   static const BorderRadius _radiusMd = BorderRadius.all(Radius.circular(16));
@@ -52,7 +48,7 @@ class AppTheme {
           brightness: Brightness.light,
         ).copyWith(
           primary: _brandPrimary,
-          onPrimary: Colors.white,
+          onPrimary: const Color(0xFFFFFFFF),
           primaryContainer: const Color(0xFFBFEDEA),
           onPrimaryContainer: _onSurface,
           secondary: _brandSecondary,
@@ -70,7 +66,6 @@ class AppTheme {
           surface: _surface,
           onSurface: _onSurface,
           onSurfaceVariant: _onSurfaceMuted,
-          outline: _border,
           surfaceTint: _brandPrimary,
         );
 
@@ -93,10 +88,6 @@ class AppTheme {
       onInfoContainer: _onInfoContainer,
       disabled: _disabled,
       onDisabled: _onDisabled,
-      surfaceLow: _surface,
-      surfaceHigh: _surfaceHigh,
-      surfaceHighest: _surfaceHighest,
-      border: _border,
     );
 
     WidgetStateProperty<Color?> buttonBg(Color color, Color disabledColor) {
@@ -119,7 +110,7 @@ class AppTheme {
       colorScheme: scheme,
       scaffoldBackgroundColor: _bg,
       extensions: [sem],
-      dividerColor: sem.border,
+      dividerColor: scheme.outlineVariant,
       appBarTheme: AppBarTheme(
         backgroundColor: _bg,
         foregroundColor: scheme.onSurface,
@@ -128,8 +119,8 @@ class AppTheme {
         centerTitle: false,
       ),
       cardTheme: CardThemeData(
-        color: sem.surfaceHigh,
-        surfaceTintColor: Colors.transparent,
+        color: scheme.surfaceContainerHigh,
+        surfaceTintColor: const Color(0x00000000),
         elevation: _cardElevation,
         shape: const RoundedRectangleBorder(borderRadius: _radiusLg),
         margin: EdgeInsets.zero,
@@ -140,7 +131,7 @@ class AppTheme {
         shape: const RoundedRectangleBorder(borderRadius: _radiusMd),
       ),
       navigationBarTheme: NavigationBarThemeData(
-        backgroundColor: sem.surfaceHigh,
+        backgroundColor: scheme.surfaceContainerHigh,
         indicatorColor: scheme.primaryContainer,
         labelTextStyle: WidgetStatePropertyAll(
           TextStyle(color: scheme.onSurface, fontWeight: FontWeight.w600),
@@ -173,9 +164,11 @@ class AppTheme {
           ),
           side: WidgetStateProperty.resolveWith((states) {
             if (states.contains(WidgetState.disabled)) {
-              return BorderSide(color: sem.border.withValues(alpha: 0.45));
+              return BorderSide(
+                color: scheme.outlineVariant.withValues(alpha: 0.45),
+              );
             }
-            return BorderSide(color: sem.border);
+            return BorderSide(color: scheme.outlineVariant);
           }),
           foregroundColor: buttonFg(scheme.primary, sem.onDisabled),
           textStyle: const WidgetStatePropertyAll(
@@ -196,11 +189,11 @@ class AppTheme {
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: sem.surfaceHigh,
+        fillColor: scheme.surfaceContainerHigh,
         border: const OutlineInputBorder(borderRadius: _radiusMd),
         enabledBorder: OutlineInputBorder(
           borderRadius: _radiusMd,
-          borderSide: BorderSide(color: sem.border),
+          borderSide: BorderSide(color: scheme.outlineVariant),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: _radiusMd,
@@ -223,8 +216,8 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: sem.surfaceHigh,
-        surfaceTintColor: Colors.transparent,
+        backgroundColor: scheme.surfaceContainerHigh,
+        surfaceTintColor: const Color(0x00000000),
         shape: const RoundedRectangleBorder(borderRadius: _radiusLg),
         titleTextStyle: TextStyle(
           color: scheme.onSurface,
@@ -235,8 +228,8 @@ class AppTheme {
       ),
       progressIndicatorTheme: ProgressIndicatorThemeData(
         color: scheme.primary,
-        linearTrackColor: sem.surfaceHighest,
-        circularTrackColor: sem.surfaceHighest,
+        linearTrackColor: scheme.surfaceContainerHighest,
+        circularTrackColor: scheme.surfaceContainerHighest,
       ),
     );
   }

@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/utils/money.dart';
 import '../application/products_notifier.dart';
 import '../data/product.dart';
@@ -263,24 +262,28 @@ class _ImagePreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = path;
+    final scheme = Theme.of(context).colorScheme;
 
     return Container(
       height: 160,
       decoration: BoxDecoration(
-        color: context.sem.surfaceHighest,
+        color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
       ),
       alignment: Alignment.center,
       clipBehavior: Clip.antiAlias,
       child: (p == null || p.isEmpty)
-          ? const Icon(Icons.image_outlined, size: 48)
+          ? Icon(Icons.image_outlined, size: 48, color: scheme.onSurfaceVariant)
           : Image.file(
               File(p),
               width: double.infinity,
               height: 160,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) =>
-                  const Icon(Icons.broken_image_outlined, size: 48),
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.broken_image_outlined,
+                size: 48,
+                color: scheme.onSurfaceVariant,
+              ),
             ),
     );
   }

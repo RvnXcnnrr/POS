@@ -129,7 +129,7 @@ class _StatCard extends StatelessWidget {
     final (bg, onBg) = switch (tone) {
       _CardTone.primary => (scheme.primaryContainer, scheme.onPrimaryContainer),
       _CardTone.warning => (sem.warningContainer, sem.onWarningContainer),
-      _CardTone.neutral => (sem.surfaceHigh, scheme.onSurface),
+      _CardTone.neutral => (scheme.surfaceContainerHigh, scheme.onSurface),
     };
 
     return Card(

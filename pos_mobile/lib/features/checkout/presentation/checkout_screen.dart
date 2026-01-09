@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/utils/money.dart';
@@ -351,6 +352,7 @@ class _PaymentTypePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sem = context.sem;
+    final scheme = Theme.of(context).colorScheme;
 
     ButtonStyle styleFor({
       required bool selected,
@@ -359,12 +361,14 @@ class _PaymentTypePicker extends StatelessWidget {
     }) {
       return ButtonStyle(
         backgroundColor: WidgetStatePropertyAll<Color>(
-          selected ? selectedBg : sem.surfaceHigh,
+          selected ? selectedBg : scheme.surfaceContainerHigh,
         ),
         foregroundColor: WidgetStatePropertyAll<Color>(
-          selected ? selectedFg : Theme.of(context).colorScheme.onSurface,
+          selected ? selectedFg : scheme.onSurface,
         ),
-        side: WidgetStatePropertyAll<BorderSide>(BorderSide(color: sem.border)),
+        side: WidgetStatePropertyAll<BorderSide>(
+          BorderSide(color: scheme.outlineVariant),
+        ),
       );
     }
 
@@ -483,6 +487,7 @@ class _CreditCustomerSection extends ConsumerWidget {
   }
 
   Future<Customer?> _pickCustomer(BuildContext context, WidgetRef ref) async {
+    final rootContext = context;
     final repo = ref.read(customersRepositoryProvider);
     final customers = await repo.listAllByHighestBalance();
     if (!context.mounted) return null;
@@ -492,24 +497,54 @@ class _CreditCustomerSection extends ConsumerWidget {
       showDragHandle: true,
       builder: (context) {
         if (customers.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(24),
-            child: Text(
-              'No customers yet. Add customers in Settings → Customers.',
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'No customers yet. Add a customer to use Credit (Utang).',
+                ),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    rootContext.go('/settings/customers/new');
+                  },
+                  icon: const Icon(Icons.person_add_alt_1),
+                  label: const Text('Add customer'),
+                ),
+              ],
             ),
           );
         }
 
         return ListView.separated(
           padding: const EdgeInsets.all(16),
-          itemCount: customers.length,
+          itemCount: customers.length + 1,
           separatorBuilder: (context, index) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
-            final c = customers[index];
+            if (index == 0) {
+              return ListTile(
+                leading: const Icon(Icons.person_add_alt_1),
+                title: const Text('Add customer'),
+                subtitle: const Text('Create a new utang (credit) customer'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () {
+                  Navigator.pop(context);
+                  rootContext.go('/settings/customers/new');
+                },
+              );
+            }
+
+            final customerIndex = index - 1;
+            final c = customers[customerIndex];
             final hasUtang = c.balanceCents > 0;
             final sem = context.sem;
+            final scheme = Theme.of(context).colorScheme;
             return ListTile(
-              tileColor: sem.surfaceHigh,
+              tileColor: scheme.surfaceContainerHigh,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -572,7 +607,7 @@ class _ProductGrid extends StatelessWidget {
           child: Ink(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              color: context.sem.surfaceHigh,
+              color: Theme.of(context).colorScheme.surfaceContainerHigh,
             ),
             child: Opacity(
               opacity: canTap ? 1.0 : 0.55,

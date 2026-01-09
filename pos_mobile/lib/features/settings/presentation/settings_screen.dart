@@ -229,6 +229,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sem = context.sem;
+    final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -252,8 +253,8 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _SectionHeader(
               title: 'Backup',
-              background: sem.surfaceHighest,
-              foreground: Theme.of(context).colorScheme.onSurface,
+              background: scheme.surfaceContainerHigh,
+              foreground: scheme.onSurface,
               icon: Icons.cloud_upload_rounded,
             ),
             ListTile(
@@ -273,8 +274,8 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             _SectionHeader(
               title: 'Data',
-              background: sem.surfaceHighest,
-              foreground: Theme.of(context).colorScheme.onSurface,
+              background: scheme.surfaceContainerHigh,
+              foreground: scheme.onSurface,
               icon: Icons.storage_rounded,
             ),
             ListTile(
@@ -311,12 +312,14 @@ class _SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.sem.border),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         children: [

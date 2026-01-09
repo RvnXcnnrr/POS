@@ -41,7 +41,7 @@ class CustomersScreen extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(16),
                   child: Ink(
                     decoration: BoxDecoration(
-                      color: context.sem.surfaceHigh,
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Padding(

@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/utils/money.dart';
 import '../../../core/security/pin_auth.dart';
-import '../../../core/theme/app_semantic_colors.dart';
 import '../application/products_notifier.dart';
 
 class ProductsScreen extends ConsumerWidget {
@@ -136,6 +135,7 @@ class _ProductImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final path = imagePath;
+    final scheme = Theme.of(context).colorScheme;
 
     if (path == null || path.isEmpty) {
       return Container(
@@ -143,10 +143,13 @@ class _ProductImage extends StatelessWidget {
         height: 56,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: context.sem.surfaceHighest,
+          color: scheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Icon(Icons.image_not_supported_outlined),
+        child: Icon(
+          Icons.image_not_supported_outlined,
+          color: scheme.onSurfaceVariant,
+        ),
       );
     }
 
@@ -163,10 +166,13 @@ class _ProductImage extends StatelessWidget {
             height: 56,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: context.sem.surfaceHighest,
+              color: scheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.broken_image_outlined),
+            child: Icon(
+              Icons.broken_image_outlined,
+              color: scheme.onSurfaceVariant,
+            ),
           );
         },
       ),

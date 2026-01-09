@@ -234,7 +234,7 @@ class _SummaryCard extends StatelessWidget {
       _SummaryTone.success => (sem.successContainer, sem.onSuccessContainer),
       _SummaryTone.warning => (sem.warningContainer, sem.onWarningContainer),
       _SummaryTone.info => (sem.infoContainer, sem.onInfoContainer),
-      _SummaryTone.neutral => (sem.surfaceHigh, scheme.onSurface),
+      _SummaryTone.neutral => (scheme.surfaceContainerHigh, scheme.onSurface),
     };
 
     return Card(
