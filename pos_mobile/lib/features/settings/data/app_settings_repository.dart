@@ -20,13 +20,38 @@ class AppSettingsRepository {
 
   final AppDatabase _db;
 
+  static const int defaultBrandColorValue = 0xFF005F5C;
+
   Future<void> _ensureRow() async {
     final db = await _db.db;
     await db.insert('app_settings', const {
       'id': 1,
       'store_name': 'POS',
       'pin_code': null,
+      'brand_color': defaultBrandColorValue,
     }, conflictAlgorithm: ConflictAlgorithm.ignore);
+  }
+
+  Future<int> getBrandColorValue() async {
+    await _ensureRow();
+    final db = await _db.db;
+    final rows = await db.query(
+      'app_settings',
+      columns: ['brand_color'],
+      where: 'id = 1',
+      limit: 1,
+    );
+    if (rows.isEmpty) return defaultBrandColorValue;
+    final v = rows.first['brand_color'] as int?;
+    return v ?? defaultBrandColorValue;
+  }
+
+  Future<void> setBrandColorValue(int argbValue) async {
+    await _ensureRow();
+    final db = await _db.db;
+    await db.update('app_settings', {
+      'brand_color': argbValue,
+    }, where: 'id = 1');
   }
 
   Future<String?> getPinCode() async {

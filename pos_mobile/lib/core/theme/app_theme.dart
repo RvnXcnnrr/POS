@@ -3,92 +3,189 @@ import 'package:flutter/material.dart';
 import 'app_semantic_colors.dart';
 
 class AppTheme {
-  static const _brandPrimary = Color(0xFF005F5C); // deep teal/emerald
-  static const _brandSecondary = Color(0xFF00B8C4); // electric mint/cyan
+  static const int defaultBrandColorValue = 0xFF005F5C;
+
   static const _brandTertiary = Color(0xFFFFB100); // amber (warnings)
 
-  static const _bg = Color(0xFFF5FAF9); // near-white w/ subtle tint
-  static const _surface = Color(0xFFFBFDFC);
+  static const _bgLight = Color(0xFFF5FAF9); // near-white w/ subtle tint
+  static const _bgDark = Color(0xFF0B0F10); // near-black (true dark)
 
-  static const _onSurface = Color(0xFF0B1F1E);
-  static const _onSurfaceMuted = Color(0xFF3A5150);
+  // Light surface/text
+  static const _surfaceLight = Color(0xFFFBFDFC);
+  static const _onSurfaceLight = Color(0xFF0B1F1E);
+  static const _onSurfaceMutedLight = Color(0xFF3A5150);
 
-  static const _danger = Color(0xFFB42318);
-  static const _onDanger = Color(0xFFFFFFFF);
-  static const _dangerContainer = Color(0xFFFFE4E2);
-  static const _onDangerContainer = Color(0xFF5A0B08);
+  // Dark surface/text
+  static const _surfaceDark = Color(0xFF0E1415);
+  static const _surfaceContainerLowDark = Color(0xFF101819);
+  static const _surfaceContainerDark = Color(0xFF121C1D);
+  static const _surfaceContainerHighDark = Color(0xFF162022);
+  static const _surfaceContainerHighestDark = Color(0xFF1A2628);
+  static const _onSurfaceDark = Color(0xFFF1F7F6);
+  static const _onSurfaceMutedDark = Color(0xFFB9C7C6);
+  static const _outlineDark = Color(0xFF2C3A3C);
+  static const _outlineVariantDark = Color(0xFF223031);
 
-  static const _success = Color(0xFF067647);
-  static const _onSuccess = Color(0xFFFFFFFF);
-  static const _successContainer = Color(0xFFD2F9E5);
-  static const _onSuccessContainer = Color(0xFF04452A);
+  // Light semantic
+  static const _dangerLight = Color(0xFFB42318);
+  static const _onDangerLight = Color(0xFFFFFFFF);
+  static const _dangerContainerLight = Color(0xFFFFE4E2);
+  static const _onDangerContainerLight = Color(0xFF5A0B08);
 
-  static const _warning = Color(0xFFE07A00);
-  static const _onWarning = Color(0xFF1F1300);
-  static const _warningContainer = Color(0xFFFFE9C7);
-  static const _onWarningContainer = Color(0xFF4A2C00);
+  static const _successLight = Color(0xFF067647);
+  static const _onSuccessLight = Color(0xFFFFFFFF);
+  static const _successContainerLight = Color(0xFFD2F9E5);
+  static const _onSuccessContainerLight = Color(0xFF04452A);
 
-  static const _info = Color(0xFF0B7EA2);
-  static const _onInfo = Color(0xFFFFFFFF);
-  static const _infoContainer = Color(0xFFD2F2FF);
-  static const _onInfoContainer = Color(0xFF084155);
+  static const _warningLight = Color(0xFFE07A00);
+  static const _onWarningLight = Color(0xFF1F1300);
+  static const _warningContainerLight = Color(0xFFFFE9C7);
+  static const _onWarningContainerLight = Color(0xFF4A2C00);
 
-  static const _disabled = Color(0xFF9AA8A7);
-  static const _onDisabled = Color(0xFF1C2B2A);
+  static const _infoLight = Color(0xFF0B7EA2);
+  static const _onInfoLight = Color(0xFFFFFFFF);
+  static const _infoContainerLight = Color(0xFFD2F2FF);
+  static const _onInfoContainerLight = Color(0xFF084155);
+
+  static const _disabledLight = Color(0xFF9AA8A7);
+  static const _onDisabledLight = Color(0xFF1C2B2A);
+
+  // Dark semantic (tuned for low-light comfort)
+  static const _dangerDark = Color(0xFFFF6B5E);
+  static const _onDangerDark = Color(0xFF1B0907);
+  static const _dangerContainerDark = Color(0xFF3A1210);
+  static const _onDangerContainerDark = Color(0xFFFFDAD6);
+
+  static const _successDark = Color(0xFF22C55E);
+  static const _onSuccessDark = Color(0xFF071A0E);
+  static const _successContainerDark = Color(0xFF0F271A);
+  static const _onSuccessContainerDark = Color(0xFFBFF0D1);
+
+  static const _warningDark = Color(0xFFFFB020);
+  static const _onWarningDark = Color(0xFF1B1204);
+  static const _warningContainerDark = Color(0xFF2C1E08);
+  static const _onWarningContainerDark = Color(0xFFFFE6C2);
+
+  static const _infoDark = Color(0xFF4FD1FF);
+  static const _onInfoDark = Color(0xFF04151B);
+  static const _infoContainerDark = Color(0xFF082733);
+  static const _onInfoContainerDark = Color(0xFFC6F0FF);
+
+  static const _disabledDark = Color(0xFF465354);
+  static const _onDisabledDark = Color(0xFF101718);
 
   static const double _cardElevation = 2.5;
   static const BorderRadius _radiusLg = BorderRadius.all(Radius.circular(18));
   static const BorderRadius _radiusMd = BorderRadius.all(Radius.circular(16));
   static const BorderRadius _radiusSm = BorderRadius.all(Radius.circular(14));
 
-  static ThemeData light() {
-    final scheme =
-        ColorScheme.fromSeed(
-          seedColor: _brandPrimary,
-          brightness: Brightness.light,
-        ).copyWith(
-          primary: _brandPrimary,
-          onPrimary: const Color(0xFFFFFFFF),
-          primaryContainer: const Color(0xFFBFEDEA),
-          onPrimaryContainer: _onSurface,
-          secondary: _brandSecondary,
-          onSecondary: _onSurface,
-          secondaryContainer: const Color(0xFFCFF7FA),
-          onSecondaryContainer: _onSurface,
-          tertiary: _brandTertiary,
-          onTertiary: _onSurface,
-          tertiaryContainer: _warningContainer,
-          onTertiaryContainer: _onWarningContainer,
-          error: _danger,
-          onError: _onDanger,
-          errorContainer: _dangerContainer,
-          onErrorContainer: _onDangerContainer,
-          surface: _surface,
-          onSurface: _onSurface,
-          onSurfaceVariant: _onSurfaceMuted,
-          surfaceTint: _brandPrimary,
-        );
+  static ThemeData light({required Color brandColor}) {
+    return _build(brandColor: brandColor, brightness: Brightness.light);
+  }
 
-    final sem = const AppSemanticColors(
-      success: _success,
-      onSuccess: _onSuccess,
-      successContainer: _successContainer,
-      onSuccessContainer: _onSuccessContainer,
-      warning: _warning,
-      onWarning: _onWarning,
-      warningContainer: _warningContainer,
-      onWarningContainer: _onWarningContainer,
-      danger: _danger,
-      onDanger: _onDanger,
-      dangerContainer: _dangerContainer,
-      onDangerContainer: _onDangerContainer,
-      info: _info,
-      onInfo: _onInfo,
-      infoContainer: _infoContainer,
-      onInfoContainer: _onInfoContainer,
-      disabled: _disabled,
-      onDisabled: _onDisabled,
+  static ThemeData dark({required Color brandColor}) {
+    return _build(brandColor: brandColor, brightness: Brightness.dark);
+  }
+
+  static Color _onBrand(Color brandColor) {
+    final b = ThemeData.estimateBrightnessForColor(brandColor);
+    // Avoid Colors.* in widgets; keep hard values local to theme.
+    return b == Brightness.dark
+        ? const Color(0xFFFFFFFF)
+        : const Color(0xFF000000);
+  }
+
+  static ThemeData _build({
+    required Color brandColor,
+    required Brightness brightness,
+  }) {
+    final isDark = brightness == Brightness.dark;
+    final onBrand = _onBrand(brandColor);
+
+    final base = ColorScheme.fromSeed(
+      seedColor: brandColor,
+      brightness: brightness,
     );
+
+    final scheme = isDark
+        ? base.copyWith(
+            primary: brandColor,
+            onPrimary: onBrand,
+            secondary: brandColor,
+            onSecondary: onBrand,
+            tertiary: _brandTertiary,
+            error: _dangerDark,
+            onError: _onDangerDark,
+            errorContainer: _dangerContainerDark,
+            onErrorContainer: _onDangerContainerDark,
+            surface: _surfaceDark,
+            onSurface: _onSurfaceDark,
+            onSurfaceVariant: _onSurfaceMutedDark,
+            outline: _outlineDark,
+            outlineVariant: _outlineVariantDark,
+            surfaceContainerLow: _surfaceContainerLowDark,
+            surfaceContainer: _surfaceContainerDark,
+            surfaceContainerHigh: _surfaceContainerHighDark,
+            surfaceContainerHighest: _surfaceContainerHighestDark,
+            surfaceTint: brandColor,
+          )
+        : base.copyWith(
+            primary: brandColor,
+            onPrimary: onBrand,
+            secondary: brandColor,
+            onSecondary: onBrand,
+            tertiary: _brandTertiary,
+            error: _dangerLight,
+            onError: _onDangerLight,
+            errorContainer: _dangerContainerLight,
+            onErrorContainer: _onDangerContainerLight,
+            surface: _surfaceLight,
+            onSurface: _onSurfaceLight,
+            onSurfaceVariant: _onSurfaceMutedLight,
+            surfaceTint: brandColor,
+          );
+
+    final sem = isDark
+        ? const AppSemanticColors(
+            success: _successDark,
+            onSuccess: _onSuccessDark,
+            successContainer: _successContainerDark,
+            onSuccessContainer: _onSuccessContainerDark,
+            warning: _warningDark,
+            onWarning: _onWarningDark,
+            warningContainer: _warningContainerDark,
+            onWarningContainer: _onWarningContainerDark,
+            danger: _dangerDark,
+            onDanger: _onDangerDark,
+            dangerContainer: _dangerContainerDark,
+            onDangerContainer: _onDangerContainerDark,
+            info: _infoDark,
+            onInfo: _onInfoDark,
+            infoContainer: _infoContainerDark,
+            onInfoContainer: _onInfoContainerDark,
+            disabled: _disabledDark,
+            onDisabled: _onDisabledDark,
+          )
+        : const AppSemanticColors(
+            success: _successLight,
+            onSuccess: _onSuccessLight,
+            successContainer: _successContainerLight,
+            onSuccessContainer: _onSuccessContainerLight,
+            warning: _warningLight,
+            onWarning: _onWarningLight,
+            warningContainer: _warningContainerLight,
+            onWarningContainer: _onWarningContainerLight,
+            danger: _dangerLight,
+            onDanger: _onDangerLight,
+            dangerContainer: _dangerContainerLight,
+            onDangerContainer: _onDangerContainerLight,
+            info: _infoLight,
+            onInfo: _onInfoLight,
+            infoContainer: _infoContainerLight,
+            onInfoContainer: _onInfoContainerLight,
+            disabled: _disabledLight,
+            onDisabled: _onDisabledLight,
+          );
 
     WidgetStateProperty<Color?> buttonBg(Color color, Color disabledColor) {
       return WidgetStateProperty.resolveWith((states) {
@@ -106,13 +203,13 @@ class AppTheme {
 
     return ThemeData(
       useMaterial3: true,
-      brightness: Brightness.light,
+      brightness: brightness,
       colorScheme: scheme,
-      scaffoldBackgroundColor: _bg,
+      scaffoldBackgroundColor: isDark ? _bgDark : _bgLight,
       extensions: [sem],
       dividerColor: scheme.outlineVariant,
       appBarTheme: AppBarTheme(
-        backgroundColor: _bg,
+        backgroundColor: isDark ? _bgDark : _bgLight,
         foregroundColor: scheme.onSurface,
         elevation: 0,
         scrolledUnderElevation: 1,

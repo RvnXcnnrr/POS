@@ -146,3 +146,25 @@ extension AppSemanticColorsX on BuildContext {
     return colors!;
   }
 }
+
+/// POS-specific semantic aliases.
+///
+/// - `cash` maps to success
+/// - `credit` maps to warning
+/// - `error` maps to danger
+extension PosSemanticAliases on AppSemanticColors {
+  Color get cash => success;
+  Color get onCash => onSuccess;
+  Color get cashContainer => successContainer;
+  Color get onCashContainer => onSuccessContainer;
+
+  Color get credit => warning;
+  Color get onCredit => onWarning;
+  Color get creditContainer => warningContainer;
+  Color get onCreditContainer => onWarningContainer;
+
+  Color get error => danger;
+  Color get onError => onDanger;
+  Color get errorContainer => dangerContainer;
+  Color get onErrorContainer => onDangerContainer;
+}

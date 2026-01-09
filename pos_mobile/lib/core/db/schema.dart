@@ -1,5 +1,5 @@
 class Schema {
-  static const int currentVersion = 4;
+  static const int currentVersion = 5;
 
   /// Latest schema used for fresh installs.
   static const createStatements = <String>[
@@ -73,7 +73,8 @@ CREATE TABLE payments (
 CREATE TABLE app_settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),
   store_name TEXT NOT NULL,
-  pin_code TEXT
+  pin_code TEXT,
+  brand_color INTEGER
 );
 ''',
 

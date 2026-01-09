@@ -50,6 +50,7 @@ class AppDatabase {
           'id': 1,
           'store_name': 'POS',
           'pin_code': null,
+          'brand_color': 0xFF005F5C,
         }, conflictAlgorithm: ConflictAlgorithm.ignore);
       },
       onUpgrade: (db, oldVersion, newVersion) async {
@@ -127,6 +128,15 @@ class AppDatabase {
             whereArgs: [id],
           );
         }
+      }
+
+      if (oldVersion < 5) {
+        await txn.execute(
+          'ALTER TABLE app_settings ADD COLUMN brand_color INTEGER',
+        );
+        await txn.update('app_settings', {
+          'brand_color': 0xFF005F5C,
+        }, where: 'id = 1 AND brand_color IS NULL');
       }
     });
   }
