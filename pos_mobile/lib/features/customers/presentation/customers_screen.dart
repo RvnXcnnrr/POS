@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/utils/money.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../application/customers_notifier.dart';
 
 class CustomersScreen extends ConsumerWidget {
@@ -32,30 +33,47 @@ class CustomersScreen extends ConsumerWidget {
                 final c = customers[index];
                 final hasUtang = c.balanceCents > 0;
                 final indicatorColor = hasUtang
-                    ? Theme.of(context).colorScheme.error
-                    : Theme.of(context).colorScheme.primary;
+                    ? context.sem.warning
+                    : context.sem.success;
 
                 return InkWell(
                   onTap: () => context.go('/settings/customers/${c.id}'),
                   borderRadius: BorderRadius.circular(16),
                   child: Ink(
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                      color: context.sem.surfaceHigh,
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: Row(
                         children: [
-                          Icon(Icons.circle, size: 14, color: indicatorColor),
+                          Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: indicatorColor,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(c.name, style: Theme.of(context).textTheme.titleMedium),
-                                if (c.phone != null && c.phone!.trim().isNotEmpty)
-                                  Text(c.phone!, style: Theme.of(context).textTheme.bodySmall),
+                                Text(
+                                  c.name,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w800),
+                                ),
+                                if (c.phone != null &&
+                                    c.phone!.trim().isNotEmpty)
+                                  Text(
+                                    c.phone!,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
                               ],
                             ),
                           ),
@@ -64,12 +82,17 @@ class CustomersScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 Money.format(c.balanceCents),
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
                                       fontWeight: FontWeight.w700,
                                       color: indicatorColor,
                                     ),
                               ),
-                              Text(hasUtang ? 'Has utang' : 'Paid', style: Theme.of(context).textTheme.bodySmall),
+                              Text(
+                                hasUtang ? 'Has utang' : 'Paid',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
                             ],
                           ),
                         ],

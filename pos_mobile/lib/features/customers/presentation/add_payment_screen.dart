@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 
+import '../../../core/theme/app_semantic_colors.dart';
 import '../../../core/utils/money.dart';
 import '../../dashboard/application/dashboard_notifier.dart';
 import '../../reports/application/reports_notifier.dart';
@@ -19,11 +21,14 @@ class AddPaymentScreen extends ConsumerStatefulWidget {
 class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
   final _formKey = GlobalKey<FormState>();
   final _amountCtrl = TextEditingController();
+  final _noteCtrl = TextEditingController();
+  String _method = 'cash';
   bool _saving = false;
 
   @override
   void dispose() {
     _amountCtrl.dispose();
+    _noteCtrl.dispose();
     super.dispose();
   }
 
@@ -37,7 +42,9 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
       body: SafeArea(
         child: customerAsync.when(
           data: (customer) {
-            if (customer == null) return const Center(child: Text('Customer not found'));
+            if (customer == null) {
+              return const Center(child: Text('Customer not found'));
+            }
             return ListView(
               padding: const EdgeInsets.all(16),
               children: [
@@ -47,17 +54,24 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(customer.name, style: Theme.of(context).textTheme.titleLarge),
+                        Text(
+                          customer.name,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
                         const SizedBox(height: 12),
-                        Text('Current balance', style: Theme.of(context).textTheme.titleMedium),
+                        Text(
+                          'Current balance',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
                         const SizedBox(height: 4),
                         Text(
                           Money.format(customer.balanceCents),
-                          style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                          style: Theme.of(context).textTheme.displaySmall
+                              ?.copyWith(
                                 fontWeight: FontWeight.w800,
                                 color: customer.balanceCents > 0
-                                    ? Theme.of(context).colorScheme.error
-                                    : Theme.of(context).colorScheme.primary,
+                                    ? context.sem.warning
+                                    : context.sem.success,
                               ),
                         ),
                       ],
@@ -67,21 +81,61 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                 const SizedBox(height: 16),
                 Form(
                   key: _formKey,
-                  child: TextFormField(
-                    controller: _amountCtrl,
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      labelText: 'Payment amount',
-                      prefixText: '₱',
-                      border: OutlineInputBorder(),
-                    ),
-                    validator: (v) {
-                      final cents = Money.tryParseToCents(v ?? '');
-                      if (cents == null) return 'Enter a valid amount';
-                      if (cents <= 0) return 'Must be > 0';
-                      if (cents > customer.balanceCents) return 'Cannot pay more than balance';
-                      return null;
-                    },
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        controller: _amountCtrl,
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                        ],
+                        decoration: const InputDecoration(
+                          labelText: 'Payment amount',
+                          prefixText: '₱',
+                          border: OutlineInputBorder(),
+                        ),
+                        validator: (v) {
+                          final cents = Money.tryParseToCents(v ?? '');
+                          if (cents == null) {
+                            return 'Enter a valid amount';
+                          }
+                          if (cents <= 0) {
+                            return 'Must be > 0';
+                          }
+                          if (cents > customer.balanceCents) {
+                            return 'Cannot pay more than balance';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      DropdownMenu<String>(
+                        initialSelection: _method,
+                        label: const Text('Method'),
+                        enabled: !_saving,
+                        dropdownMenuEntries: const [
+                          DropdownMenuEntry(value: 'cash', label: 'Cash'),
+                          DropdownMenuEntry(value: 'gcash', label: 'GCash'),
+                          DropdownMenuEntry(value: 'maya', label: 'Maya'),
+                          DropdownMenuEntry(value: 'other', label: 'Other'),
+                        ],
+                        onSelected: (v) {
+                          if (v == null) return;
+                          setState(() => _method = v);
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _noteCtrl,
+                        textInputAction: TextInputAction.done,
+                        decoration: const InputDecoration(
+                          labelText: 'Note (optional)',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -93,22 +147,29 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
                         : () async {
                             final navigator = Navigator.of(context);
                             final messenger = ScaffoldMessenger.of(context);
-                            final ok = _formKey.currentState?.validate() ?? false;
+                            final ok =
+                                _formKey.currentState?.validate() ?? false;
                             if (!ok) return;
 
-                            final cents = Money.tryParseToCents(_amountCtrl.text)!;
+                            final cents = Money.tryParseToCents(
+                              _amountCtrl.text,
+                            )!;
                             final confirmed = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
                                 title: const Text('Confirm payment'),
-                                content: Text('Record payment of ${Money.format(cents)}?'),
+                                content: Text(
+                                  'Record payment of ${Money.format(cents)}?',
+                                ),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.pop(context, false),
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
                                     child: const Text('Cancel'),
                                   ),
                                   FilledButton(
-                                    onPressed: () => Navigator.pop(context, true),
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
                                     child: const Text('Confirm'),
                                   ),
                                 ],
@@ -118,19 +179,33 @@ class _AddPaymentScreenState extends ConsumerState<AddPaymentScreen> {
 
                             setState(() => _saving = true);
                             try {
-                              await ref.read(customersRepositoryProvider).addPayment(
+                              await ref
+                                  .read(customersRepositoryProvider)
+                                  .addPayment(
                                     customerId: customerId,
                                     amountCents: cents,
+                                    method: _method,
+                                    note: _noteCtrl.text.trim().isEmpty
+                                        ? null
+                                        : _noteCtrl.text.trim(),
                                   );
-                              await ref.read(customersNotifierProvider.notifier).load();
+                              await ref
+                                  .read(customersNotifierProvider.notifier)
+                                  .load();
                               ref.invalidate(customerByIdProvider(customerId));
-                              ref.invalidate(paymentsByCustomerProvider(customerId));
+                              ref.invalidate(
+                                paymentsByCustomerProvider(customerId),
+                              );
                               ref.invalidate(reportsNotifierProvider);
                               ref.invalidate(dashboardNotifierProvider);
-                              if (!mounted) return;
+                              if (!mounted) {
+                                return;
+                              }
                               navigator.pop();
                             } catch (e) {
-                              if (!mounted) return;
+                              if (!mounted) {
+                                return;
+                              }
                               messenger.showSnackBar(
                                 SnackBar(content: Text('Failed: $e')),
                               );

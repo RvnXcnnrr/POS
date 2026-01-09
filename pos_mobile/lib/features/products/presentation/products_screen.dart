@@ -5,8 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/utils/money.dart';
+import '../../../core/security/pin_auth.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../application/products_notifier.dart';
-import '../data/products_repository.dart';
 
 class ProductsScreen extends ConsumerWidget {
   const ProductsScreen({super.key});
@@ -38,7 +39,10 @@ class ProductsScreen extends ConsumerWidget {
                   child: ListTile(
                     contentPadding: const EdgeInsets.all(12),
                     leading: _ProductImage(imagePath: p.imagePath),
-                    title: Text(p.name, style: Theme.of(context).textTheme.titleMedium),
+                    title: Text(
+                      p.name,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
                     subtitle: Text(
                       '${Money.format(p.priceCents)} • Stock: ${p.stock}',
                       style: Theme.of(context).textTheme.bodyMedium,
@@ -48,51 +52,66 @@ class ProductsScreen extends ConsumerWidget {
                       children: [
                         IconButton(
                           tooltip: 'Edit',
-                          onPressed: () => context.go('/settings/products/${p.id}/edit'),
+                          onPressed: () =>
+                              context.go('/settings/products/${p.id}/edit'),
                           icon: const Icon(Icons.edit_outlined),
                         ),
                         IconButton(
-                          tooltip: 'Delete',
+                          tooltip: 'Deactivate',
                           onPressed: () async {
-                            final repo = ref.read(productsRepositoryProvider);
-                            final canDelete = await repo.canDelete(p.id);
-                            if (!context.mounted) return;
-                            if (!canDelete) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Cannot delete: product exists in past sales.'),
-                                ),
-                              );
+                            final pinOk = await PinAuth.requirePin(
+                              context,
+                              ref,
+                              reason: 'Deactivate Product',
+                            );
+                            if (!pinOk) return;
+
+                            if (!context.mounted) {
                               return;
                             }
 
                             final confirmed = await showDialog<bool>(
                               context: context,
                               builder: (context) => AlertDialog(
-                                title: const Text('Delete product?'),
-                                content: Text('Delete "${p.name}"?'),
+                                title: const Text('Deactivate product?'),
+                                content: Text(
+                                  'Deactivate "${p.name}"? It will be hidden from Checkout and lists.',
+                                ),
                                 actions: [
                                   TextButton(
-                                    onPressed: () => Navigator.pop(context, false),
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
                                     child: const Text('Cancel'),
                                   ),
                                   FilledButton(
-                                    onPressed: () => Navigator.pop(context, true),
-                                    child: const Text('Delete'),
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: const Text('Deactivate'),
                                   ),
                                 ],
                               ),
                             );
                             if (confirmed != true) return;
 
-                            await repo.deleteImageIfExists(p.imagePath);
-                            await ref.read(productsNotifierProvider.notifier).delete(p.id);
+                            if (!context.mounted) {
+                              return;
+                            }
+
+                            // Soft delete: keep image + history, just hide from active lists.
+                            await ref
+                                .read(productsNotifierProvider.notifier)
+                                .delete(p.id);
                             if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Product deleted')),
+                              const SnackBar(
+                                content: Text('Product deactivated'),
+                              ),
                             );
                           },
-                          icon: const Icon(Icons.delete_outline),
+                          icon: Icon(
+                            Icons.delete_outline,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                         ),
                       ],
                     ),
@@ -124,7 +143,7 @@ class _ProductImage extends StatelessWidget {
         height: 56,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+          color: context.sem.surfaceHighest,
           borderRadius: BorderRadius.circular(12),
         ),
         child: const Icon(Icons.image_not_supported_outlined),
@@ -144,7 +163,7 @@ class _ProductImage extends StatelessWidget {
             height: 56,
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              color: context.sem.surfaceHighest,
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(Icons.broken_image_outlined),

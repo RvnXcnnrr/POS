@@ -22,6 +22,7 @@ class ProductsRepository {
     final db = await _db.db;
     final rows = await db.query(
       'products',
+      where: 'is_active = 1',
       orderBy: 'name COLLATE NOCASE ASC',
     );
     return rows.map(Product.fromMap).toList();
@@ -59,9 +60,15 @@ class ProductsRepository {
     return count == 0;
   }
 
+  /// Soft delete: mark inactive to preserve historical sales.
   Future<void> delete(int id) async {
     final db = await _db.db;
-    await db.delete('products', where: 'id = ?', whereArgs: [id]);
+    await db.update(
+      'products',
+      {'is_active': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   Future<String?> copyProductImageToInternalDir({
@@ -90,7 +97,11 @@ class ProductsRepository {
     }
   }
 
-  Future<void> updateStock(DatabaseExecutor txn, int productId, int newStock) async {
+  Future<void> updateStock(
+    DatabaseExecutor txn,
+    int productId,
+    int newStock,
+  ) async {
     await txn.update(
       'products',
       {'stock': newStock},

@@ -1,5 +1,8 @@
 class Schema {
-  static const v1CreateStatements = <String>[
+  static const int currentVersion = 4;
+
+  /// Latest schema used for fresh installs.
+  static const createStatements = <String>[
     // Products
     '''
 CREATE TABLE products (
@@ -8,6 +11,7 @@ CREATE TABLE products (
   price_cents INTEGER NOT NULL,
   stock INTEGER NOT NULL,
   image_path TEXT,
+  is_active INTEGER NOT NULL DEFAULT 1,
   created_at INTEGER NOT NULL
 );
 ''',
@@ -19,6 +23,7 @@ CREATE TABLE customers (
   name TEXT NOT NULL,
   phone TEXT,
   balance_cents INTEGER NOT NULL,
+  is_active INTEGER NOT NULL DEFAULT 1,
   created_at INTEGER NOT NULL
 );
 ''',
@@ -30,6 +35,8 @@ CREATE TABLE sales (
   total_amount_cents INTEGER NOT NULL,
   payment_type TEXT NOT NULL CHECK(payment_type IN ('cash','credit')),
   customer_id INTEGER,
+  business_date TEXT NOT NULL,
+  is_voided INTEGER NOT NULL DEFAULT 0,
   created_at INTEGER NOT NULL,
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE RESTRICT
 );
@@ -54,6 +61,8 @@ CREATE TABLE payments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   customer_id INTEGER NOT NULL,
   amount_cents INTEGER NOT NULL,
+  method TEXT NOT NULL DEFAULT 'cash' CHECK(method IN ('cash','gcash','maya','other')),
+  note TEXT,
   created_at INTEGER NOT NULL,
   FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE RESTRICT
 );
@@ -68,10 +77,13 @@ CREATE TABLE app_settings (
 );
 ''',
 
+    // Performance indexes
     'CREATE INDEX idx_sales_created_at ON sales(created_at);',
+    'CREATE INDEX idx_sales_business_date ON sales(business_date);',
+    'CREATE INDEX idx_sale_items_sale_id ON sale_items(sale_id);',
     'CREATE INDEX idx_payments_created_at ON payments(created_at);',
     'CREATE INDEX idx_customers_balance ON customers(balance_cents);',
   ];
 
-  // Intentionally no seed data.
+  // Intentionally no seed data (except app_settings row is inserted in AppDatabase).
 }

@@ -22,6 +22,7 @@ Commands:
 - [Getting Started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
 - [Database](docs/database.md)
+- [MVP Specification](docs/mvp.md)
 - [Troubleshooting](docs/troubleshooting.md)
 
 ## Tech stack

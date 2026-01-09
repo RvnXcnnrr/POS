@@ -12,6 +12,7 @@ import 'features/customers/presentation/customers_screen.dart';
 import 'features/customers/presentation/customer_form_screen.dart';
 import 'features/customers/presentation/customer_detail_screen.dart';
 import 'features/customers/presentation/add_payment_screen.dart';
+import 'core/security/pin_auth.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -112,12 +113,22 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-class _RootScaffold extends StatelessWidget {
+class _RootScaffold extends ConsumerWidget {
   const _RootScaffold({required this.navigationShell});
 
   final StatefulNavigationShell navigationShell;
 
-  void _onTap(int index) {
+  Future<void> _onTap(BuildContext context, WidgetRef ref, int index) async {
+    // Settings access is PIN-protected when configured.
+    if (index == 3) {
+      final ok = await PinAuth.requirePin(
+        context,
+        ref,
+        reason: 'Unlock Settings',
+      );
+      if (!ok) return;
+    }
+
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
@@ -125,12 +136,12 @@ class _RootScaffold extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       body: navigationShell,
       bottomNavigationBar: NavigationBar(
         selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: _onTap,
+        onDestinationSelected: (i) => _onTap(context, ref, i),
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.dashboard_outlined),

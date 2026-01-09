@@ -2,7 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/providers.dart';
 import '../../../core/db/app_database.dart';
-import '../../../core/utils/time_range.dart';
+import '../../../core/utils/business_day.dart';
 import '../../checkout/data/sale.dart';
 
 final reportsRepositoryProvider = Provider<ReportsRepository>((ref) {
@@ -49,7 +49,9 @@ class ReportsRepository {
   final AppDatabase _db;
 
   Future<DailySalesSummary> todaySummary() async {
-    final range = TimeRange.forLocalDay(DateTime.now());
+    final now = DateTime.now();
+    final businessDate = BusinessDay.businessDateFor(now);
+    final range = BusinessDay.businessDayRange(now);
     final db = await _db.db;
 
     final salesTotals = await db.rawQuery(
@@ -60,9 +62,9 @@ SELECT
   COALESCE(SUM(CASE WHEN payment_type = 'credit' THEN total_amount_cents ELSE 0 END), 0) AS credit_total,
   COUNT(1) AS txn_count
 FROM sales
-WHERE created_at >= ? AND created_at < ?
+WHERE business_date = ? AND is_voided = 0
 ''',
-      [range.startMs, range.endExclusiveMs],
+      [businessDate],
     );
 
     final paymentsTotals = await db.rawQuery(
@@ -89,8 +91,11 @@ WHERE created_at >= ? AND created_at < ?
     );
   }
 
-  Future<List<SaleListEntry>> todaySalesList() async {
-    final range = TimeRange.forLocalDay(DateTime.now());
+  Future<List<SaleListEntry>> salesListByBusinessDate({
+    required String businessDate,
+    required int limit,
+    required int offset,
+  }) async {
     final db = await _db.db;
 
     final rows = await db.rawQuery(
@@ -103,10 +108,11 @@ SELECT
   c.name AS customer_name
 FROM sales s
 LEFT JOIN customers c ON c.id = s.customer_id
-WHERE s.created_at >= ? AND s.created_at < ?
+WHERE s.business_date = ? AND s.is_voided = 0
 ORDER BY s.created_at DESC
+LIMIT ? OFFSET ?
 ''',
-      [range.startMs, range.endExclusiveMs],
+      [businessDate, limit, offset],
     );
 
     return rows
@@ -120,5 +126,14 @@ ORDER BY s.created_at DESC
           ),
         )
         .toList();
+  }
+
+  Future<List<SaleListEntry>> todaySalesList() async {
+    final businessDate = BusinessDay.businessDateFor(DateTime.now());
+    return salesListByBusinessDate(
+      businessDate: businessDate,
+      limit: 2000,
+      offset: 0,
+    );
   }
 }

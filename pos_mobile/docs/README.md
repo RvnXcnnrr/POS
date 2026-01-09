@@ -7,4 +7,5 @@ Start here for project documentation.
 - [Getting Started](getting-started.md)
 - [Architecture](architecture.md)
 - [Database](database.md)
+- [MVP Specification](mvp.md)
 - [Troubleshooting](troubleshooting.md)

@@ -18,6 +18,7 @@ class CustomersRepository {
     final db = await _db.db;
     final rows = await db.query(
       'customers',
+      where: 'is_active = 1',
       orderBy: 'balance_cents DESC, name COLLATE NOCASE ASC',
     );
     return rows.map(Customer.fromMap).toList();
@@ -45,6 +46,17 @@ class CustomersRepository {
     );
   }
 
+  /// Soft delete: mark inactive to preserve historical sales/payments.
+  Future<void> deactivate(int id) async {
+    final db = await _db.db;
+    await db.update(
+      'customers',
+      {'is_active': 0},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<List<Payment>> listPaymentsForCustomer(int customerId) async {
     final db = await _db.db;
     final rows = await db.query(
@@ -65,6 +77,8 @@ class CustomersRepository {
   Future<void> addPayment({
     required int customerId,
     required int amountCents,
+    String method = 'cash',
+    String? note,
   }) async {
     if (amountCents <= 0) {
       throw ArgumentError('Payment amount must be > 0');
@@ -90,6 +104,8 @@ class CustomersRepository {
       await txn.insert('payments', {
         'customer_id': customerId,
         'amount_cents': amountCents,
+        'method': method,
+        'note': note,
         'created_at': DateTime.now().millisecondsSinceEpoch,
       });
 
@@ -109,7 +125,9 @@ class CustomersRepository {
 
   Future<int> outstandingCreditTotalCents() async {
     final db = await _db.db;
-    final rows = await db.rawQuery('SELECT COALESCE(SUM(balance_cents), 0) AS t FROM customers');
+    final rows = await db.rawQuery(
+      'SELECT COALESCE(SUM(balance_cents), 0) AS t FROM customers',
+    );
     return (rows.first['t'] as int?) ?? 0;
   }
 }
