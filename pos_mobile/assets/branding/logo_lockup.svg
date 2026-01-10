@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1600" height="600" viewBox="0 0 1600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lockup: mark + simple word-shape (no font dependency). Brand color #005F5C -->
+  <rect x="0" y="0" width="1600" height="600" rx="120" fill="#FFFFFF"/>
+
+  <!-- Mark container -->
+  <g transform="translate(120,80)">
+    <rect x="0" y="0" width="440" height="440" rx="110" fill="#005F5C"/>
+
+    <path d="M144 92C144 75.43 157.43 62 174 62H296C312.57 62 326 75.43 326 92V350C326 358.88 322.64 367.44 316.65 374.12L293.33 400.33C287.37 407.02 277.01 407.02 271.05 400.33L247.73 374.12C241.74 367.44 233.18 364.08 224.3 364.08C215.42 364.08 206.86 367.44 200.87 374.12L177.55 400.33C171.59 407.02 161.23 407.02 155.27 400.33L131.95 374.12C125.96 367.44 122.6 358.88 122.6 350V92C122.6 75.43 136.03 62 152.6 62H144Z" fill="#FFFFFF" fill-opacity="0.95"/>
+
+    <rect x="166" y="126" width="138" height="26" rx="13" fill="#005F5C" fill-opacity="0.12"/>
+    <rect x="166" y="176" width="112" height="22" rx="11" fill="#005F5C" fill-opacity="0.14"/>
+    <rect x="166" y="214" width="126" height="22" rx="11" fill="#005F5C" fill-opacity="0.14"/>
+    <rect x="166" y="252" width="96" height="22" rx="11" fill="#005F5C" fill-opacity="0.14"/>
+
+    <circle cx="310" cy="290" r="52" fill="#005F5C" fill-opacity="0.18"/>
+    <path d="M290 290L306 306L336 276" stroke="#005F5C" stroke-width="20" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Word-shape (geometric, not a real font): "POS" blocks -->
+  <g transform="translate(640,165)" fill="#0B1F1E">
+    <!-- P -->
+    <path d="M0 0H90C150 0 190 38 190 92C190 146 150 184 90 184H64V270H0V0ZM64 56V128H86C112 128 126 115 126 92C126 69 112 56 86 56H64Z"/>
+    <!-- O -->
+    <path d="M270 0C356 0 418 60 418 136C418 212 356 270 270 270C184 270 122 212 122 136C122 60 184 0 270 0ZM270 56C222 56 186 90 186 136C186 180 222 214 270 214C318 214 354 180 354 136C354 90 318 56 270 56Z"/>
+    <!-- S -->
+    <path d="M520 0C590 0 640 34 654 88H590C582 66 562 54 530 54C498 54 478 68 478 90C478 114 500 124 548 136C616 154 672 176 672 234C672 260 660 282 638 300C616 318 586 328 548 328C472 328 420 292 408 226H474C482 254 506 272 548 272C582 272 606 258 606 234C606 210 578 200 530 188C468 172 412 152 412 92C412 66 424 44 446 28C468 10 494 0 520 0Z"/>
+  </g>
+</svg>

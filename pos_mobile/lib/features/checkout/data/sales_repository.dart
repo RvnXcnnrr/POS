@@ -83,20 +83,22 @@ class SalesRepository {
       });
 
       for (final line in lines) {
+        final productRows = await txn.query(
+          'products',
+          columns: ['stock', 'cost_cents'],
+          where: 'id = ?',
+          whereArgs: [line.productId],
+        );
+        final currentStock = productRows.first['stock'] as int;
+        final costCents = (productRows.first['cost_cents'] as int?) ?? 0;
+
         await txn.insert('sale_items', {
           'sale_id': saleId,
           'product_id': line.productId,
           'quantity': line.quantity,
           'price_cents': line.unitPriceCents,
+          'cost_cents': costCents,
         });
-
-        final productRows = await txn.query(
-          'products',
-          columns: ['stock'],
-          where: 'id = ?',
-          whereArgs: [line.productId],
-        );
-        final currentStock = productRows.first['stock'] as int;
         await txn.update(
           'products',
           {'stock': currentStock - line.quantity},

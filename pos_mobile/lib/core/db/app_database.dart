@@ -138,6 +138,19 @@ class AppDatabase {
           'brand_color': 0xFF005F5C,
         }, where: 'id = 1 AND brand_color IS NULL');
       }
+
+      if (oldVersion < 6) {
+        // Accounting support: introduce product cost snapshotting.
+        // NOTE: sale_items.cost_cents did not exist historically, so existing
+        // rows are defaulted to 0 (unknown). All new sales must explicitly
+        // write cost_cents at sale time.
+        await txn.execute(
+          'ALTER TABLE products ADD COLUMN cost_cents INTEGER NOT NULL DEFAULT 0',
+        );
+        await txn.execute(
+          'ALTER TABLE sale_items ADD COLUMN cost_cents INTEGER NOT NULL DEFAULT 0',
+        );
+      }
     });
   }
 

@@ -36,7 +36,7 @@ class ReportsNotifier extends StateNotifier<AsyncValue<ReportsState>> {
     state = await AsyncValue.guard(() async {
       final summary = await _repo.todaySummary();
       final businessDate = BusinessDay.businessDateFor(DateTime.now());
-      final page = await _repo.salesListByBusinessDate(
+      final page = await _repo.salesListWithProfitByBusinessDate(
         businessDate: businessDate,
         limit: _pageSize + 1,
         offset: 0,

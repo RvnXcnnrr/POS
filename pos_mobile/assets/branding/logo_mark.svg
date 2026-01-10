@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- POS logo mark: receipt + check, using existing brand color #005F5C -->
+  <rect x="0" y="0" width="1024" height="1024" rx="224" fill="#005F5C"/>
+
+  <!-- Receipt body -->
+  <path d="M320 232C320 205.49 341.49 184 368 184H656C682.51 184 704 205.49 704 232V760C704 772.15 699.48 783.87 691.32 792.88L659.4 828.65C649.9 839.2 634.16 839.2 624.66 828.65L592.74 792.88C584.58 783.87 572.86 779.35 560.71 779.35C548.56 779.35 536.84 783.87 528.68 792.88L496.76 828.65C487.26 839.2 471.52 839.2 462.02 828.65L430.1 792.88C421.94 783.87 410.22 779.35 398.07 779.35C385.92 779.35 374.2 783.87 366.04 792.88L334.12 828.65C324.62 839.2 308.88 839.2 299.38 828.65L267.46 792.88C259.3 783.87 254.78 772.15 254.78 760V232C254.78 205.49 276.27 184 302.78 184H320Z" fill="#FFFFFF" fill-opacity="0.95"/>
+
+  <!-- Receipt header line -->
+  <rect x="360" y="280" width="304" height="52" rx="26" fill="#005F5C" fill-opacity="0.12"/>
+
+  <!-- Item lines -->
+  <rect x="360" y="372" width="240" height="44" rx="22" fill="#005F5C" fill-opacity="0.14"/>
+  <rect x="360" y="448" width="272" height="44" rx="22" fill="#005F5C" fill-opacity="0.14"/>
+  <rect x="360" y="524" width="208" height="44" rx="22" fill="#005F5C" fill-opacity="0.14"/>
+
+  <!-- Check mark badge -->
+  <circle cx="672" cy="600" r="112" fill="#005F5C" fill-opacity="0.18"/>
+  <path d="M630 604L664 638L722 580" stroke="#005F5C" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -15,14 +15,20 @@ final dashboardNotifierProvider =
 class DashboardState {
   const DashboardState({
     required this.todayTotalSalesCents,
+    required this.todayProfitCents,
     required this.todayTransactionCount,
     required this.outstandingCreditCents,
+    required this.inventoryValueCents,
+    required this.totalAssetsCents,
     required this.lowStockProducts,
   });
 
   final int todayTotalSalesCents;
+  final int todayProfitCents;
   final int todayTransactionCount;
   final int outstandingCreditCents;
+  final int inventoryValueCents;
+  final int totalAssetsCents;
   final List<Product> lowStockProducts;
 }
 
@@ -41,14 +47,22 @@ class DashboardNotifier extends StateNotifier<AsyncValue<DashboardState>> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       final summary = await _reportsRepository.todaySummary();
+        final inventoryValueCents = await _productsRepository.inventoryValueCents();
+        final cashCollectedTotalCents =
+          await _reportsRepository.cashCollectedTotalCents();
+        final totalAssetsCents =
+          cashCollectedTotalCents + summary.outstandingCreditCents + inventoryValueCents;
       final products = await _productsRepository.listAll();
       final lowStock = products.where((p) => p.stock <= lowStockThreshold).toList()
         ..sort((a, b) => a.stock.compareTo(b.stock));
 
       return DashboardState(
         todayTotalSalesCents: summary.totalSalesCents,
+        todayProfitCents: summary.grossProfitCents,
         todayTransactionCount: summary.transactionCount,
         outstandingCreditCents: summary.outstandingCreditCents,
+        inventoryValueCents: inventoryValueCents,
+        totalAssetsCents: totalAssetsCents,
         lowStockProducts: lowStock,
       );
     });

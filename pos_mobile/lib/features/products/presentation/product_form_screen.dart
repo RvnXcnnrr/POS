@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/utils/money.dart';
+import '../../../core/theme/app_semantic_colors.dart';
 import '../application/products_notifier.dart';
 import '../data/product.dart';
 import '../data/products_repository.dart';
@@ -23,19 +24,39 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _priceCtrl = TextEditingController();
+  final _costCtrl = TextEditingController(text: '0');
   final _stockCtrl = TextEditingController(text: '0');
 
   String? _existingImagePath;
   String? _pickedImagePath;
   bool _saving = false;
   bool _hydrated = false;
+  bool _priceBelowCost = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _priceCtrl.addListener(_recomputePricingWarning);
+    _costCtrl.addListener(_recomputePricingWarning);
+  }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _priceCtrl.dispose();
+    _costCtrl.dispose();
     _stockCtrl.dispose();
     super.dispose();
+  }
+
+  void _recomputePricingWarning() {
+    final priceCents = Money.tryParseToCents(_priceCtrl.text);
+    final costCents = Money.tryParseToCents(_costCtrl.text);
+    final next =
+        (priceCents != null && costCents != null) && priceCents < costCents;
+    if (next == _priceBelowCost) return;
+    if (!mounted) return;
+    setState(() => _priceBelowCost = next);
   }
 
   Future<void> _pickImage(ImageSource source) async {
@@ -50,6 +71,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   void _hydrate(Product p) {
     _nameCtrl.text = p.name;
     _priceCtrl.text = (p.priceCents / 100).toStringAsFixed(2);
+    _costCtrl.text = (p.costCents / 100).toStringAsFixed(2);
     _stockCtrl.text = p.stock.toString();
     _existingImagePath = p.imagePath;
     _hydrated = true;
@@ -131,6 +153,38 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               ),
               const SizedBox(height: 12),
               TextFormField(
+                controller: _costCtrl,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
+                ],
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'Cost price',
+                  prefixText: '₱',
+                  border: OutlineInputBorder(),
+                ),
+                validator: (v) {
+                  final cents = Money.tryParseToCents(v ?? '');
+                  if (cents == null) return 'Enter a valid amount';
+                  if (cents < 0) return 'Cannot be negative';
+                  return null;
+                },
+              ),
+              if (_priceBelowCost) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Warning: selling price is below cost price.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: context.sem.warning,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+              ],
+              const SizedBox(height: 12),
+              TextFormField(
                 controller: _stockCtrl,
                 keyboardType: TextInputType.number,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -189,6 +243,9 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                         final priceCents = Money.tryParseToCents(
                           _priceCtrl.text,
                         )!;
+                        final costCents = Money.tryParseToCents(
+                          _costCtrl.text,
+                        )!;
                         final stock = int.parse(_stockCtrl.text.trim());
                         final name = _nameCtrl.text.trim();
 
@@ -213,6 +270,7 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
                           final draft = ProductDraft(
                             name: name,
                             priceCents: priceCents,
+                            costCents: costCents,
                             stock: stock,
                             imagePath: imagePath,
                           );

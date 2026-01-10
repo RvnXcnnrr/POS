@@ -1,5 +1,5 @@
 class Schema {
-  static const int currentVersion = 5;
+  static const int currentVersion = 6;
 
   /// Latest schema used for fresh installs.
   static const createStatements = <String>[
@@ -9,6 +9,7 @@ CREATE TABLE products (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   price_cents INTEGER NOT NULL,
+  cost_cents INTEGER NOT NULL DEFAULT 0,
   stock INTEGER NOT NULL,
   image_path TEXT,
   is_active INTEGER NOT NULL DEFAULT 1,
@@ -50,6 +51,7 @@ CREATE TABLE sale_items (
   product_id INTEGER NOT NULL,
   quantity INTEGER NOT NULL,
   price_cents INTEGER NOT NULL,
+  cost_cents INTEGER NOT NULL,
   FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE CASCADE,
   FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
 );

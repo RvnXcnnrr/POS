@@ -28,6 +28,14 @@ class ProductsRepository {
     return rows.map(Product.fromMap).toList();
   }
 
+  Future<int> inventoryValueCents() async {
+    final db = await _db.db;
+    final rows = await db.rawQuery(
+      'SELECT COALESCE(SUM(stock * cost_cents), 0) AS t FROM products WHERE is_active = 1',
+    );
+    return (rows.first['t'] as int?) ?? 0;
+  }
+
   Future<Product?> getById(int id) async {
     final db = await _db.db;
     final rows = await db.query('products', where: 'id = ?', whereArgs: [id]);

@@ -92,9 +92,19 @@ class ReportsScreen extends ConsumerWidget {
 
             final summaryCards = <Widget>[
               _SummaryCard(
-                title: 'Total sales',
+                title: 'Total revenue',
                 value: Money.format(s.totalSalesCents),
                 tone: _SummaryTone.primary,
+              ),
+              _SummaryCard(
+                title: 'COGS',
+                value: Money.format(s.cogsCents),
+                tone: _SummaryTone.info,
+              ),
+              _SummaryCard(
+                title: 'Gross profit',
+                value: Money.format(s.grossProfitCents),
+                tone: _SummaryTone.success,
               ),
               _SummaryCard(
                 title: 'Cash',
@@ -238,7 +248,11 @@ class ReportsScreen extends ConsumerWidget {
                                   leading:
                                       _PaymentIndicator(type: t.paymentType),
                                   title: Text(Money.format(t.totalCents)),
-                                  subtitle: Text(_subtitle(t)),
+                                  subtitle: Text(
+                                    bp == ScreenBreakpoint.compact
+                                        ? _subtitle(t)
+                                        : '${_subtitle(t)} • Profit: ${Money.format(t.profitCents)}',
+                                  ),
                                   trailing: Text('#${t.id}'),
                                 ),
                               );
@@ -310,6 +324,13 @@ class _TransactionTableHeader extends StatelessWidget {
                 flex: 3,
                 child: Align(
                   alignment: Alignment.centerRight,
+                  child: Text('Profit'),
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Align(
+                  alignment: Alignment.centerRight,
                   child: Text('Total'),
                 ),
               ),
@@ -370,6 +391,20 @@ class _TransactionTableRow extends StatelessWidget {
                 child: Text(
                   dt.toString(),
                   overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              Expanded(
+                flex: 3,
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    Money.format(entry.profitCents),
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: context.sem.success,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
                 ),
               ),
               Expanded(

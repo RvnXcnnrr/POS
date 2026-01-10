@@ -34,6 +34,11 @@ class DashboardScreen extends ConsumerWidget {
                 tone: _CardTone.primary,
               ),
               _StatCard(
+                title: 'Today profit',
+                value: Money.format(d.todayProfitCents),
+                tone: _CardTone.success,
+              ),
+              _StatCard(
                 title: 'Transactions',
                 value: d.todayTransactionCount.toString(),
                 tone: _CardTone.neutral,
@@ -42,6 +47,16 @@ class DashboardScreen extends ConsumerWidget {
                 title: 'Outstanding credit',
                 value: Money.format(d.outstandingCreditCents),
                 tone: _CardTone.warning,
+              ),
+              _StatCard(
+                title: 'Inventory value',
+                value: Money.format(d.inventoryValueCents),
+                tone: _CardTone.info,
+              ),
+              _StatCard(
+                title: 'Total assets (est.)',
+                value: Money.format(d.totalAssetsCents),
+                tone: _CardTone.primary,
               ),
             ];
 
@@ -191,7 +206,7 @@ class DashboardScreen extends ConsumerWidget {
   }
 }
 
-enum _CardTone { primary, neutral, warning }
+enum _CardTone { primary, success, info, neutral, warning }
 
 class _StatCard extends StatelessWidget {
   const _StatCard({
@@ -211,6 +226,8 @@ class _StatCard extends StatelessWidget {
 
     final (bg, onBg) = switch (tone) {
       _CardTone.primary => (scheme.primaryContainer, scheme.onPrimaryContainer),
+      _CardTone.success => (sem.successContainer, sem.onSuccessContainer),
+      _CardTone.info => (sem.infoContainer, sem.onInfoContainer),
       _CardTone.warning => (sem.warningContainer, sem.onWarningContainer),
       _CardTone.neutral => (scheme.surfaceContainerHigh, scheme.onSurface),
     };
