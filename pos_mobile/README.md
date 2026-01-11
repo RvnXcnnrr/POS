@@ -40,6 +40,7 @@ Navigation adapts by breakpoint:
 ## Docs
 
 - [Project docs](docs/README.md)
+- [User Manual](docs/user-manual.md)
 - [Getting Started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
 - [Database](docs/database.md)

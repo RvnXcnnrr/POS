@@ -6,6 +6,7 @@ This project is an offline-first Flutter POS app with responsive/adaptive layout
 
 ## Contents
 
+- [User Manual](user-manual.md)
 - [Getting Started](getting-started.md)
 - [Architecture](architecture.md)
 - [Database](database.md)
