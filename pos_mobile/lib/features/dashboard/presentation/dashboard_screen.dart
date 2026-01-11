@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/money.dart';
 import '../../../core/theme/app_semantic_colors.dart';
+import '../../../core/theme/app_gradients.dart';
 import '../../../core/utils/responsive.dart';
 import '../application/dashboard_notifier.dart';
 
@@ -137,6 +138,86 @@ class DashboardScreen extends ConsumerWidget {
                 final bp = breakpointForWidth(constraints.maxWidth);
                 final padding = context.pagePadding;
 
+                Widget header() {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: AppGradients.dashboardHeader(context),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Today',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleSmall
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimaryContainer,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                            ),
+                            const SizedBox(height: 8),
+                            FittedBox(
+                              alignment: Alignment.centerLeft,
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                Money.format(d.todayTotalSalesCents),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .displaySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onPrimaryContainer,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: -0.6,
+                                    ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 16,
+                              runSpacing: 6,
+                              children: [
+                                Text(
+                                  'Profit: ${Money.format(d.todayProfitCents)}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleSmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                ),
+                                Text(
+                                  'Tx: ${d.todayTransactionCount}',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleSmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onPrimaryContainer,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
                 if (bp == ScreenBreakpoint.expanded) {
                   return Padding(
                     padding: padding,
@@ -148,6 +229,8 @@ class DashboardScreen extends ConsumerWidget {
                           child: ListView(
                             padding: EdgeInsets.zero,
                             children: [
+                              header(),
+                              const SizedBox(height: 12),
                               statsSection(bp),
                             ],
                           ),
@@ -186,6 +269,8 @@ class DashboardScreen extends ConsumerWidget {
                 return ListView(
                   padding: padding,
                   children: [
+                    header(),
+                    const SizedBox(height: 12),
                     statsSection(bp),
                     const SizedBox(height: 20),
                     Text(

@@ -3,8 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/app_semantic_colors.dart';
+import '../../../core/theme/app_gradients.dart';
 import '../../../core/utils/money.dart';
 import '../../../core/utils/responsive.dart';
+import '../../../core/widgets/gradient_button.dart';
 import '../../customers/data/customer.dart';
 import '../../customers/application/customers_notifier.dart';
 import '../../customers/data/customers_repository.dart';
@@ -154,29 +156,37 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
 
     Widget totalCard(ScreenBreakpoint bp) {
       return Card(
-        color: scheme.primaryContainer,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'TOTAL',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: scheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w800,
+        color: const Color(0x00000000),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(18),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: AppGradients.checkoutTotal(context),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'TOTAL',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: scheme.onPrimaryContainer,
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(height: 6),
+                  FittedBox(
+                    alignment: Alignment.centerLeft,
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      Money.format(cart.totalCents),
+                      style: totalStyleFor(bp),
                     ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 6),
-              FittedBox(
-                alignment: Alignment.centerLeft,
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  Money.format(cart.totalCents),
-                  style: totalStyleFor(bp),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       );
@@ -553,20 +563,37 @@ class _PaymentTypePicker extends StatelessWidget {
     final sem = context.sem;
     final scheme = Theme.of(context).colorScheme;
 
-    ButtonStyle styleFor({
+    Widget buildOption({
       required bool selected,
-      required Color selectedBg,
+      required String label,
+      required VoidCallback? onPressed,
+      required Gradient selectedGradient,
       required Color selectedFg,
     }) {
-      return ButtonStyle(
-        backgroundColor: WidgetStatePropertyAll<Color>(
-          selected ? selectedBg : scheme.surfaceContainerHigh,
+      if (selected) {
+        return GradientButton(
+          onPressed: onPressed,
+          gradient: selectedGradient,
+          foregroundColor: selectedFg,
+          minHeight: 52,
+          child: Text(label),
+        );
+      }
+
+      return OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size.fromHeight(52),
+          foregroundColor: scheme.onSurface,
+          side: BorderSide(color: scheme.outlineVariant),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
-        foregroundColor: WidgetStatePropertyAll<Color>(
-          selected ? selectedFg : scheme.onSurface,
-        ),
-        side: WidgetStatePropertyAll<BorderSide>(
-          BorderSide(color: scheme.outlineVariant),
+        onPressed: onPressed,
+        child: Text(
+          label,
+          style: Theme.of(context)
+              .textTheme
+              .titleMedium
+              ?.copyWith(fontWeight: FontWeight.w900),
         ),
       );
     }
@@ -574,26 +601,22 @@ class _PaymentTypePicker extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: FilledButton(
-            style: styleFor(
-              selected: value == PaymentType.cash,
-              selectedBg: sem.success,
-              selectedFg: sem.onSuccess,
-            ),
+          child: buildOption(
+            selected: value == PaymentType.cash,
+            label: 'Cash',
             onPressed: enabled ? () => onChanged(PaymentType.cash) : null,
-            child: const Text('Cash'),
+            selectedGradient: AppGradients.paymentCash(context),
+            selectedFg: sem.onSuccess,
           ),
         ),
         const SizedBox(width: 10),
         Expanded(
-          child: FilledButton(
-            style: styleFor(
-              selected: value == PaymentType.credit,
-              selectedBg: sem.warning,
-              selectedFg: sem.onWarning,
-            ),
+          child: buildOption(
+            selected: value == PaymentType.credit,
+            label: 'Credit (Utang)',
             onPressed: enabled ? () => onChanged(PaymentType.credit) : null,
-            child: const Text('Credit (Utang)'),
+            selectedGradient: AppGradients.paymentCredit(context),
+            selectedFg: sem.onWarning,
           ),
         ),
       ],

@@ -21,6 +21,17 @@ The app uses a **single brand color** as the source of truth.
 
 This keeps the app consistent across screens and makes rebranding straightforward.
 
+### Secondary accents (derived)
+
+In addition to the brand seed, the UI uses two **seed-derived accent tones** to keep the app modern and energetic without introducing arbitrary colors:
+
+- **Cyan/teal accent**: used for premium highlights, supportive emphasis, and subtle flair around primary UI.
+- **Indigo/purple accent**: used as a secondary highlight to add depth (especially in headers and hero surfaces).
+
+Both accents are **computed from the brand seed** (hue-rotated + tuned for light/dark) and exposed via a ThemeExtension (`AppAccents`).
+
+Important: **semantic meaning still comes from `AppSemanticColors`** (Cash/Success, Credit/Warning, Danger). Accents are decorative and should not replace meaning.
+
 ### Light / dark surfaces
 
 The app uses custom-tuned surfaces for a “soft POS” feel:
@@ -46,6 +57,18 @@ POS-specific aliases are used:
 - `error` → danger
 
 This avoids “random” per-screen colors and keeps the UX consistent.
+
+### Gradients (subtle + limited)
+
+Gradients are allowed, but only in specific hero surfaces to keep the UI premium without becoming noisy.
+
+Allowed gradient surfaces:
+
+- **Dashboard header**
+- **Checkout total container**
+- **Cash & Credit payment buttons**
+
+All gradients are **subtle** and derived from theme tokens (no per-screen custom colors). The app centralizes these in `AppGradients`.
 
 ### Shape, elevation, and spacing
 
@@ -140,6 +163,10 @@ Payment type UX:
 
 - Cash and Credit are presented as two large buttons
 - Cash is styled with success tone; Credit uses warning tone
+
+Premium polish:
+
+- The Cash/Credit buttons use a subtle gradient background to improve hierarchy while keeping semantic meaning clear.
 
 Credit (Utang) UX:
 

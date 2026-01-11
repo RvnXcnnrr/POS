@@ -7,6 +7,8 @@ import 'package:file_picker/file_picker.dart';
 import '../../../core/providers.dart';
 import '../../../core/security/pin_auth.dart';
 import '../../../core/utils/responsive.dart';
+import '../../../core/theme/app_accent_colors.dart';
+import '../../../core/theme/accent_tints.dart';
 import '../../customers/application/customers_notifier.dart';
 import '../../dashboard/application/dashboard_notifier.dart';
 import '../../products/application/products_notifier.dart';
@@ -268,13 +270,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ? EdgeInsets.zero
           : padding;
 
+      final headerBg = accentTintedSurface(
+        context: context,
+        surface: scheme.surfaceContainerHigh,
+        accent: context.accentColors.indigo,
+      );
+      final headerFg = scheme.onSurface;
+
       return ListView(
         padding: listPadding,
         children: [
           _SectionHeader(
             title: 'Security',
-            background: sem.infoContainer,
-            foreground: sem.onInfoContainer,
+            background: headerBg,
+            foreground: headerFg,
             icon: Icons.security_rounded,
           ),
           ListTile(
@@ -287,8 +296,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const SizedBox(height: 16),
           _SectionHeader(
             title: 'Backup',
-            background: scheme.surfaceContainerHigh,
-            foreground: scheme.onSurface,
+            background: headerBg,
+            foreground: headerFg,
             icon: Icons.cloud_upload_rounded,
           ),
           ListTile(
@@ -309,8 +318,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           const SizedBox(height: 16),
           _SectionHeader(
             title: 'Data',
-            background: scheme.surfaceContainerHigh,
-            foreground: scheme.onSurface,
+            background: headerBg,
+            foreground: headerFg,
             icon: Icons.storage_rounded,
           ),
           ListTile(

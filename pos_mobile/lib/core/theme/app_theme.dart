@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'app_semantic_colors.dart';
+import 'app_accent_colors.dart';
 
 class AppTheme {
   static const int defaultBrandColorValue = 0xFF005F5C;
-
-  static const _brandTertiary = Color(0xFFFFB100); // amber (warnings)
 
   static const _bgLight = Color(0xFFF5FAF9); // near-white w/ subtle tint
   static const _bgDark = Color(0xFF0B0F10); // near-black (true dark)
@@ -102,6 +101,8 @@ class AppTheme {
     final isDark = brightness == Brightness.dark;
     final onBrand = _onBrand(brandColor);
 
+    final accents = _buildAccents(brandColor: brandColor, brightness: brightness);
+
     final base = ColorScheme.fromSeed(
       seedColor: brandColor,
       brightness: brightness,
@@ -111,9 +112,10 @@ class AppTheme {
         ? base.copyWith(
             primary: brandColor,
             onPrimary: onBrand,
-            secondary: brandColor,
-            onSecondary: onBrand,
-            tertiary: _brandTertiary,
+            secondary: accents.cyan,
+            onSecondary: accents.onCyan,
+            tertiary: accents.indigo,
+            onTertiary: accents.onIndigo,
             error: _dangerDark,
             onError: _onDangerDark,
             errorContainer: _dangerContainerDark,
@@ -132,9 +134,10 @@ class AppTheme {
         : base.copyWith(
             primary: brandColor,
             onPrimary: onBrand,
-            secondary: brandColor,
-            onSecondary: onBrand,
-            tertiary: _brandTertiary,
+            secondary: accents.cyan,
+            onSecondary: accents.onCyan,
+            tertiary: accents.indigo,
+            onTertiary: accents.onIndigo,
             error: _dangerLight,
             onError: _onDangerLight,
             errorContainer: _dangerContainerLight,
@@ -206,7 +209,7 @@ class AppTheme {
       brightness: brightness,
       colorScheme: scheme,
       scaffoldBackgroundColor: isDark ? _bgDark : _bgLight,
-      extensions: [sem],
+      extensions: [sem, accents],
       dividerColor: scheme.outlineVariant,
       appBarTheme: AppBarTheme(
         backgroundColor: isDark ? _bgDark : _bgLight,
@@ -329,5 +332,62 @@ class AppTheme {
         circularTrackColor: scheme.surfaceContainerHighest,
       ),
     );
+  }
+
+  static AppAccentColors _buildAccents({
+    required Color brandColor,
+    required Brightness brightness,
+  }) {
+    // Derived accents (no hard-coded palette). We rotate hue toward
+    // teal/cyan and purple/indigo while keeping the brand's general feel.
+    final cyan = _accentFromBrand(
+      brandColor: brandColor,
+      targetHueDeg: 190,
+      brightness: brightness,
+    );
+    final indigo = _accentFromBrand(
+      brandColor: brandColor,
+      targetHueDeg: 275,
+      brightness: brightness,
+    );
+
+    return AppAccentColors(
+      cyan: cyan,
+      onCyan: _onBrand(cyan),
+      indigo: indigo,
+      onIndigo: _onBrand(indigo),
+    );
+  }
+
+  static Color _accentFromBrand({
+    required Color brandColor,
+    required double targetHueDeg,
+    required Brightness brightness,
+  }) {
+    final hsl = HSLColor.fromColor(brandColor);
+    final hue = _lerpAngle(hsl.hue, targetHueDeg, 0.70);
+
+    final saturation = (hsl.saturation * 1.08).clamp(0.0, 1.0);
+
+    // Keep accents vivid enough to feel premium, but ensure they remain
+    // readable in both light and dark schemes.
+    final baseLightness = hsl.lightness;
+    final lightness = (brightness == Brightness.dark
+            ? (baseLightness + 0.14)
+            : (baseLightness + 0.06))
+        .clamp(0.0, 1.0);
+
+    return hsl
+        .withHue(hue)
+        .withSaturation(saturation)
+        .withLightness(lightness)
+        .toColor();
+  }
+
+  static double _lerpAngle(double a, double b, double t) {
+    // Shortest-path interpolation in degrees.
+    final delta = ((b - a + 540) % 360) - 180;
+    final v = (a + delta * t) % 360;
+    return v < 0 ? v + 360 : v;
   }
 }

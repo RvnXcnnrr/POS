@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/utils/money.dart';
 import '../../../core/theme/app_semantic_colors.dart';
+import '../../../core/theme/app_accent_colors.dart';
+import '../../../core/theme/accent_tints.dart';
 import '../application/reports_notifier.dart';
 import '../../checkout/data/sale.dart';
 import '../../checkout/data/sales_repository.dart';
@@ -158,9 +160,9 @@ class ReportsScreen extends ConsumerWidget {
                       SliverPadding(
                         padding: padding,
                         sliver: SliverToBoxAdapter(
-                          child: Text(
-                            'Today',
-                            style: Theme.of(context).textTheme.titleLarge,
+                          child: _AccentSectionHeader(
+                            title: 'Today',
+                            accent: context.accentColors.cyan,
                           ),
                         ),
                       ),
@@ -195,9 +197,10 @@ class ReportsScreen extends ConsumerWidget {
                           8,
                         ),
                         sliver: SliverToBoxAdapter(
-                          child: Text(
-                            'Transactions',
-                            style: Theme.of(context).textTheme.titleMedium,
+                          child: _AccentSectionHeader(
+                            title: 'Transactions',
+                            accent: context.accentColors.cyan,
+                            dense: true,
                           ),
                         ),
                       ),
@@ -441,18 +444,18 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final sem = context.sem;
 
-    final (bg, onBg) = switch (tone) {
-      _SummaryTone.primary => (
-        scheme.primaryContainer,
-        scheme.onPrimaryContainer,
-      ),
-      _SummaryTone.success => (sem.successContainer, sem.onSuccessContainer),
-      _SummaryTone.warning => (sem.warningContainer, sem.onWarningContainer),
-      _SummaryTone.info => (sem.infoContainer, sem.onInfoContainer),
-      _SummaryTone.neutral => (scheme.surfaceContainerHigh, scheme.onSurface),
-    };
+    // Summary containers use a subtle cyan-tinted surface for hierarchy.
+    // Keep text/values in primary/on-surface colors (no accents/gradients).
+    final bg = accentTintedSurface(
+      context: context,
+      surface: scheme.surfaceContainerHigh,
+      accent: context.accentColors.cyan,
+    );
+
+    final titleColor = scheme.onSurfaceVariant;
+    final valueColor =
+        tone == _SummaryTone.primary ? scheme.primary : scheme.onSurface;
 
     return Card(
       color: bg,
@@ -464,7 +467,7 @@ class _SummaryCard extends StatelessWidget {
             Text(
               title,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: onBg,
+                color: titleColor,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -472,12 +475,58 @@ class _SummaryCard extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                color: onBg,
+                color: valueColor,
                 fontWeight: FontWeight.w900,
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AccentSectionHeader extends StatelessWidget {
+  const _AccentSectionHeader({
+    required this.title,
+    required this.accent,
+    this.dense = false,
+  });
+
+  final String title;
+  final Color accent;
+  final bool dense;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    final bg = accentTintedSurface(
+      context: context,
+      surface: scheme.surfaceContainerHigh,
+      accent: accent,
+    );
+
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: 12,
+        vertical: dense ? 10 : 12,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Text(
+        title,
+        style: (dense
+                ? Theme.of(context).textTheme.titleMedium
+                : Theme.of(context).textTheme.titleLarge)
+            ?.copyWith(
+              color: scheme.onSurface,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.2,
+            ),
       ),
     );
   }
