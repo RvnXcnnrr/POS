@@ -1,8 +1,12 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import '../../../core/providers.dart';
 import '../../../core/security/pin_auth.dart';
@@ -161,16 +165,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (!ok) return;
 
     final filename = 'pos_backup_${DateTime.now().millisecondsSinceEpoch}.db';
-    final path = await FilePicker.platform.saveFile(
-      dialogTitle: 'Export database backup',
-      fileName: filename,
-      type: FileType.custom,
-      allowedExtensions: const ['db'],
-    );
-    if (path == null) return;
+    String? destinationPath;
+
+    if (Platform.isAndroid) {
+      // Android SAF may return content:// URIs for saveFile which aren't
+      // writable via dart:io. Directory selection is more reliable.
+      final dir = await FilePicker.platform.getDirectoryPath(
+        dialogTitle: 'Select folder for backup',
+      );
+      if (dir == null) return;
+      destinationPath = p.join(dir, filename);
+    } else {
+      destinationPath = await FilePicker.platform.saveFile(
+        dialogTitle: 'Export database backup',
+        fileName: filename,
+        type: FileType.custom,
+        allowedExtensions: const ['db'],
+      );
+      if (destinationPath == null) return;
+    }
 
     try {
-      await ref.read(appDatabaseProvider).exportTo(path);
+      await ref.read(appDatabaseProvider).exportTo(destinationPath);
       if (!context.mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -192,9 +208,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       type: FileType.custom,
       allowedExtensions: const ['db'],
       withData: false,
+      withReadStream: true,
     );
-    final filePath = picked?.files.single.path;
-    if (filePath == null) return;
+
+    final file = picked?.files.single;
+    if (file == null) return;
+
+    String? filePath = file.path;
+    String? tempPath;
+
+    if (filePath == null) {
+      final stream = file.readStream;
+      if (stream == null) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not read selected backup file')),
+        );
+        return;
+      }
+
+      final tmpDir = await getTemporaryDirectory();
+      tempPath = p.join(
+        tmpDir.path,
+        'pos_restore_${DateTime.now().millisecondsSinceEpoch}.db',
+      );
+      final out = File(tempPath).openWrite();
+      await stream.pipe(out);
+      await out.flush();
+      await out.close();
+      filePath = tempPath;
+    }
 
     if (!context.mounted) return;
 
@@ -220,6 +263,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     try {
       await ref.read(appDatabaseProvider).restoreFrom(filePath);
 
+      // PIN may change after restore; clear any in-memory session.
+      ref.read(pinUnlockedProvider.notifier).state = false;
+      ref.invalidate(pinCodeProvider);
+
       // Refresh app state from restored DB.
       await ref.read(productsNotifierProvider.notifier).load();
       await ref.read(customersNotifierProvider.notifier).load();
@@ -235,6 +282,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Restore failed: $e')));
+    }
+
+    if (tempPath != null) {
+      try {
+        await File(tempPath).delete();
+      } catch (_) {
+        // Ignore cleanup failures.
+      }
     }
   }
 
