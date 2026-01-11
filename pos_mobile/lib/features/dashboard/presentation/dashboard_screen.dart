@@ -106,15 +106,18 @@ class DashboardScreen extends ConsumerWidget {
 
             Widget statsSection(ScreenBreakpoint bp) {
               if (bp == ScreenBreakpoint.compact) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (final (i, card) in statCards.indexed) ...[
-                      SizedBox(width: double.infinity, child: card),
-                      if (i != statCards.length - 1)
-                        const SizedBox(height: 12),
-                    ],
-                  ],
+                // Two-up grid on phones to reduce scrolling.
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: statCards.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.65,
+                  ),
+                  itemBuilder: (context, index) => statCards[index],
                 );
               }
 

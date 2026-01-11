@@ -28,6 +28,64 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   bool _processing = false;
 
+  final TextEditingController _productSearchController =
+      TextEditingController();
+  _ProductSort _productSort = _ProductSort.nameAz;
+
+  @override
+  void initState() {
+    super.initState();
+    _productSearchController.addListener(() {
+      if (!mounted) return;
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _productSearchController.dispose();
+    super.dispose();
+  }
+
+  List<Product> _visibleProducts(List<Product> products) {
+    final q = _productSearchController.text.trim().toLowerCase();
+    Iterable<Product> filtered = products;
+    if (q.isNotEmpty) {
+      filtered = filtered.where((p) => p.name.toLowerCase().contains(q));
+    }
+
+    final list = filtered.toList();
+    int byName(Product a, Product b) {
+      final c = a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      if (c != 0) return c;
+      return a.id.compareTo(b.id);
+    }
+
+    list.sort((a, b) {
+      return switch (_productSort) {
+        _ProductSort.nameAz => byName(a, b),
+        _ProductSort.priceLowHigh =>
+          (a.priceCents != b.priceCents)
+              ? a.priceCents.compareTo(b.priceCents)
+              : byName(a, b),
+        _ProductSort.stockHighLow =>
+          (a.stock != b.stock)
+              ? b.stock.compareTo(a.stock)
+              : byName(a, b),
+      };
+    });
+
+    return list;
+  }
+
+  String _sortLabel(_ProductSort s) {
+    return switch (s) {
+      _ProductSort.nameAz => 'Name',
+      _ProductSort.priceLowHigh => 'Price',
+      _ProductSort.stockHighLow => 'Stock',
+    };
+  }
+
   Future<bool> _showReviewDialog({
     required BuildContext context,
     required CartState cart,
@@ -141,6 +199,77 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final sem = context.sem;
     final scheme = Theme.of(context).colorScheme;
 
+    Widget productSearchAndSort() {
+      final q = _productSearchController.text.trim();
+      return Row(
+        children: [
+          Expanded(
+            child: TextField(
+              controller: _productSearchController,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search_rounded),
+                hintText: 'Search products',
+                suffixIcon: q.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: 'Clear search',
+                        onPressed: () {
+                          _productSearchController.clear();
+                          FocusScope.of(context).unfocus();
+                        },
+                        icon: const Icon(Icons.close_rounded),
+                      ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          PopupMenuButton<_ProductSort>(
+            tooltip: 'Sort',
+            onSelected: (v) => setState(() => _productSort = v),
+            itemBuilder: (context) => const [
+              PopupMenuItem(
+                value: _ProductSort.nameAz,
+                child: Text('Name (A–Z)'),
+              ),
+              PopupMenuItem(
+                value: _ProductSort.priceLowHigh,
+                child: Text('Price (Low → High)'),
+              ),
+              PopupMenuItem(
+                value: _ProductSort.stockHighLow,
+                child: Text('Stock (High → Low)'),
+              ),
+            ],
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.sort_rounded, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    _sortLabel(_productSort),
+                    style: Theme.of(context)
+                        .textTheme
+                        .labelLarge
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+
     TextStyle? totalStyleFor(ScreenBreakpoint bp) {
       final base = switch (bp) {
         ScreenBreakpoint.compact => Theme.of(context).textTheme.displayMedium,
@@ -220,34 +349,44 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         ScreenBreakpoint.expanded => 260.0,
       };
 
+      final visible = _visibleProducts(products);
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Products', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
-          _ProductGrid(
-            products: products,
-            enabled: !_processing,
-            maxCrossAxisExtent: maxExtent,
-            scrollable: false,
-            onTapProduct: (p) {
-              if (_processing) return;
-              if (p.stock <= 0) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Out of stock')),
-                );
-                return;
-              }
-              final existing = cart.linesByProductId[p.id];
-              if (existing != null && existing.quantity >= p.stock) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Not enough stock')),
-                );
-                return;
-              }
-              ref.read(cartNotifierProvider.notifier).addProduct(p);
-            },
-          ),
+          productSearchAndSort(),
+          const SizedBox(height: 12),
+          if (visible.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: Text('No matching products.')),
+            )
+          else
+            _ProductGrid(
+              products: visible,
+              enabled: !_processing,
+              maxCrossAxisExtent: maxExtent,
+              scrollable: false,
+              onTapProduct: (p) {
+                if (_processing) return;
+                if (p.stock <= 0) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Out of stock')),
+                  );
+                  return;
+                }
+                final existing = cart.linesByProductId[p.id];
+                if (existing != null && existing.quantity >= p.stock) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Not enough stock')),
+                  );
+                  return;
+                }
+                ref.read(cartNotifierProvider.notifier).addProduct(p);
+              },
+            ),
         ],
       );
     }
@@ -367,6 +506,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               };
 
               Widget productsPane({required bool includeSummary}) {
+                final visible = _visibleProducts(products);
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -381,30 +521,39 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: 8),
+                    productSearchAndSort(),
+                    const SizedBox(height: 12),
                     Expanded(
-                      child: _ProductGrid(
-                        products: products,
-                        enabled: !_processing,
-                        maxCrossAxisExtent: productMaxExtent,
-                        scrollable: true,
-                        onTapProduct: (p) {
-                          if (_processing) return;
-                          if (p.stock <= 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Out of stock')),
-                            );
-                            return;
-                          }
-                          final existing = cart.linesByProductId[p.id];
-                          if (existing != null && existing.quantity >= p.stock) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Not enough stock')),
-                            );
-                            return;
-                          }
-                          ref.read(cartNotifierProvider.notifier).addProduct(p);
-                        },
-                      ),
+                      child: visible.isEmpty
+                          ? const Center(child: Text('No matching products.'))
+                          : _ProductGrid(
+                              products: visible,
+                              enabled: !_processing,
+                              maxCrossAxisExtent: productMaxExtent,
+                              scrollable: true,
+                              onTapProduct: (p) {
+                                if (_processing) return;
+                                if (p.stock <= 0) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Out of stock')),
+                                  );
+                                  return;
+                                }
+                                final existing = cart.linesByProductId[p.id];
+                                if (existing != null &&
+                                    existing.quantity >= p.stock) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Not enough stock'),
+                                    ),
+                                  );
+                                  return;
+                                }
+                                ref
+                                    .read(cartNotifierProvider.notifier)
+                                    .addProduct(p);
+                              },
+                            ),
                     ),
                   ],
                 );
@@ -546,6 +695,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     );
   }
 }
+
+enum _ProductSort { nameAz, priceLowHigh, stockHighLow }
 
 class _PaymentTypePicker extends StatelessWidget {
   const _PaymentTypePicker({

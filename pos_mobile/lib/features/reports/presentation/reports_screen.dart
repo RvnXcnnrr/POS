@@ -99,7 +99,7 @@ class ReportsScreen extends ConsumerWidget {
                 tone: _SummaryTone.primary,
               ),
               _SummaryCard(
-                title: 'COGS',
+                title: 'COGS (Cost)',
                 value: Money.format(s.cogsCents),
                 tone: _SummaryTone.info,
               ),
@@ -150,7 +150,8 @@ class ReportsScreen extends ConsumerWidget {
                   final padding = context.pagePadding;
 
                   final summaryAspectRatio = switch (bp) {
-                    ScreenBreakpoint.compact => isLandscape ? 2.6 : 3.2,
+                    // Two-up grid on phones to reduce scrolling.
+                    ScreenBreakpoint.compact => isLandscape ? 2.0 : 1.55,
                     ScreenBreakpoint.medium => 2.8,
                     ScreenBreakpoint.expanded => 2.6,
                   };
@@ -174,15 +175,19 @@ class ReportsScreen extends ConsumerWidget {
                           0,
                         ),
                         sliver: SliverGrid(
-                          gridDelegate:
-                              SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: bp == ScreenBreakpoint.compact
-                                ? 520
-                                : 420,
-                            mainAxisSpacing: 12,
-                            crossAxisSpacing: 12,
-                            childAspectRatio: summaryAspectRatio,
-                          ),
+                          gridDelegate: bp == ScreenBreakpoint.compact
+                              ? SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 12,
+                                  crossAxisSpacing: 12,
+                                  childAspectRatio: summaryAspectRatio,
+                                )
+                              : SliverGridDelegateWithMaxCrossAxisExtent(
+                                  maxCrossAxisExtent: 420,
+                                  mainAxisSpacing: 12,
+                                  crossAxisSpacing: 12,
+                                  childAspectRatio: summaryAspectRatio,
+                                ),
                           delegate: SliverChildBuilderDelegate(
                             (context, index) => summaryCards[index],
                             childCount: summaryCards.length,
@@ -444,14 +449,33 @@ class _SummaryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final sem = context.sem;
 
-    // Summary containers use a subtle cyan-tinted surface for hierarchy.
-    // Keep text/values in primary/on-surface colors (no accents/gradients).
-    final bg = accentTintedSurface(
-      context: context,
-      surface: scheme.surfaceContainerHigh,
-      accent: context.accentColors.cyan,
-    );
+    // Summary containers use subtle *tinted surfaces* for scanability.
+    // Keep text/values in primary/on-surface colors (no gradients, no colored numbers).
+    final Color bg = switch (tone) {
+      _SummaryTone.primary => accentTintedSurface(
+          context: context,
+          surface: scheme.surfaceContainerHigh,
+          accent: context.accentColors.cyan,
+        ),
+      _SummaryTone.info => accentTintedSurface(
+          context: context,
+          surface: scheme.surfaceContainerHigh,
+          accent: context.accentColors.cyan,
+        ),
+      _SummaryTone.success => accentTintedSurface(
+          context: context,
+          surface: scheme.surfaceContainerHigh,
+          accent: sem.success,
+        ),
+      _SummaryTone.warning => accentTintedSurface(
+          context: context,
+          surface: scheme.surfaceContainerHigh,
+          accent: sem.warning,
+        ),
+      _SummaryTone.neutral => scheme.surfaceContainerHigh,
+    };
 
     final titleColor = scheme.onSurfaceVariant;
     final valueColor =
@@ -505,6 +529,8 @@ class _AccentSectionHeader extends StatelessWidget {
       context: context,
       surface: scheme.surfaceContainerHigh,
       accent: accent,
+      lightOpacity: 0.08,
+      darkOpacity: 0.12,
     );
 
     return Container(
