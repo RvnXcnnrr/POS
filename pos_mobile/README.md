@@ -41,6 +41,7 @@ Navigation adapts by breakpoint:
 
 - [Project docs](docs/README.md)
 - [User Manual](docs/user-manual.md)
+- [UI/UX Design Overview](docs/ui-ux.md)
 - [Getting Started](docs/getting-started.md)
 - [Architecture](docs/architecture.md)
 - [Database](docs/database.md)
